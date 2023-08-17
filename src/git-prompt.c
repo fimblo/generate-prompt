@@ -1,26 +1,77 @@
+// includes
 #include <stdio.h>
+#include <string.h>
 #include <git2.h>
 
+// defines
 #define COLOR_GIT_CLEAN    "\033[1;30m"
 #define COLOR_GIT_MODIFIED "\033[0;33m"
 #define COLOR_GIT_STAGED   "\033[0;36m"
+#define COLOR_CWD          "\033[01;34m"
 #define COLOR_RESET        "\033[0m"
+
+// declarations
+const char* findGitRepoName(const char* path);
+const char* findGitRepository(const char *path);
 
 int main() {
   git_libgit2_init();
 
-  git_repository *repo = NULL;
-  if (git_repository_open(&repo, ".") != 0) {
+  // get path to git repo at '.' else return
+  const char *git_repository_path = findGitRepository(".");
+  if (strlen(git_repository_path) == 0) {
     return 0;
   }
 
+  // get repo else return
+  git_repository *repo = NULL;
+  if (git_repository_open(&repo, git_repository_path) != 0) {
+    return 0;
+  }
+
+  // ref to current HEAD of repo else return
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
     git_repository_free(repo);
     return 1;
   }
 
+  // get repo and branch name
+  const char *repo_name = findGitRepoName(".");
   const char *branch_name = git_reference_shorthand(head_ref);
+
+  const char *prompt_format = "\[%s\]\[%s%s%s\] %s $ ";
+
+  char prompt_cwd[256];
+  snprintf(prompt_cwd, sizeof(prompt_cwd), "%s\\W%s", COLOR_CWD, COLOR_RESET);
+
+  char prompt_git_clean[512];
+  snprintf(prompt_git_clean, sizeof(prompt_git_clean),
+           prompt_format,
+           repo_name,
+           COLOR_GIT_CLEAN,
+           branch_name,
+           COLOR_RESET,
+           prompt_cwd);
+  char prompt_git_modified[512];
+  snprintf(prompt_git_modified, sizeof(prompt_git_modified),
+           prompt_format,
+           repo_name,
+           COLOR_GIT_MODIFIED,
+           branch_name,
+           COLOR_RESET,
+           prompt_cwd);
+  char prompt_git_staged[512];
+  snprintf(prompt_git_staged, sizeof(prompt_git_staged),
+           prompt_format,
+           repo_name,
+           COLOR_GIT_STAGED,
+           branch_name,
+           COLOR_RESET,
+           prompt_cwd);
+
+
+
 
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
@@ -34,7 +85,7 @@ int main() {
 
   int status_count = git_status_list_entrycount(status_list);
   if (status_count == 0) {
-    printf("%s%s%s", COLOR_GIT_CLEAN, branch_name, COLOR_RESET);
+    printf("%s",prompt_git_clean);
   } else {
     int i;
     int staged_changes = 0;
@@ -49,9 +100,9 @@ int main() {
       }
     }
     if (staged_changes) {
-      printf("%s%s%s", COLOR_GIT_STAGED, branch_name, COLOR_RESET);
+      printf("%s",prompt_git_staged);
     } else if (unstaged_changes) {
-      printf("%s%s*%s", COLOR_GIT_MODIFIED, branch_name, COLOR_RESET);
+      printf("%s",prompt_git_modified);
     }
   }
 
@@ -60,6 +111,77 @@ int main() {
   git_repository_free(repo);
   git_libgit2_shutdown();
 
-  printf("Branch: %s", branch_name);
   return 0;
+}
+
+const char* findGitRepoName(const char* path) {
+  git_buf repo_path = { 0 };
+  int error = git_repository_discover(&repo_path, path, 0, NULL);
+
+  if (error == 0) {
+    git_repository *repo = NULL;
+    if (git_repository_open(&repo, repo_path.ptr) == 0) {
+
+
+      const char *full_repo_dir = git_repository_commondir(repo);
+      size_t full_repo_dir_len = strlen(full_repo_dir);
+      char *repo_dir = "";
+
+      if (full_repo_dir_len >= 6 && strcmp(full_repo_dir + full_repo_dir_len - 6, "/.git/") == 0) {
+        repo_dir = strndup(full_repo_dir, full_repo_dir_len - 6); // Remove the trailing "/.git/"
+      }
+
+      const char *last_slash = strrchr(repo_dir, '/');
+      if (last_slash) {
+        const char *repo_name = last_slash + 1;
+        free(repo_dir);
+        git_repository_free(repo);
+        git_buf_dispose(&repo_path);
+        return repo_name;
+      }
+      free(repo_dir);
+      git_repository_free(repo);
+    }
+  }
+
+  git_buf_dispose(&repo_path);
+  return NULL;
+}
+
+
+
+
+// Return an empty string if no repo
+// else the path to the repo
+const char* findGitRepository(const char *path) {
+  git_buf repo_path = { 0 };
+  int error = git_repository_discover(&repo_path, path, 0, NULL);
+
+  if (error == 0) {
+    char *last_slash = strstr(repo_path.ptr, "/.git/");
+    if (last_slash) {
+      *last_slash = '\0';  // Null-terminate the string at the last slash
+    }
+    char *result = strdup(repo_path.ptr);  // Duplicate the path before freeing the buffer
+    git_buf_free(&repo_path);
+    return result;
+  }
+
+  // Check if we've reached the file system root
+  if (strcmp(path, "/") == 0 || strcmp(path, ".") == 0) {
+    return strdup("");
+  }
+
+  // Move to the parent directory
+  char *last_slash = strrchr(path, '/');
+  if (last_slash) {
+    char parent_path[last_slash - path + 1];
+    strncpy(parent_path, path, last_slash - path);
+    parent_path[last_slash - path] = '\0';
+
+    return findGitRepository(parent_path);
+  }
+  else {
+    return strdup("");
+  }
 }
