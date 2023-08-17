@@ -1,2 +1,35 @@
-# git-prompt
-Simple git prompt
+* git-prompt
+Simple and fast git prompt
+** I wrote this because
+- I'm a bash user, and
+- bash functions to update the prompt is just too slow
+** What does git-prompt do?
+It prints a useful prompt, for easy plugging into PS1.
+** Usage
+#+begin_src bash
+  prompt_cmd() {
+    PS1="$(/path/to/git-prompt)"
+  }
+  PROMPT_COMMAND=prompt_cmd
+#+end_src
+
+If you export the environment variable DEFAULT_PROMPT, and set the
+prompt you want outside of a git repo, this will be used. If you
+don't, there's a simple default it will use.
+
+** Bonus
+While floundering around with this over-verbose language, I wrote
+some other binaries which could be of use at some point. maybe.
+Actually, others have already written these, and they are probably
+much better than these.
+- git-reponame : outputs the repo name, or an empty string
+- git-root : outputs the path to the repo root
+** Dependencies
+libgit2
+
+** Install
+- Run =make git-prompt= to build only git-prompt
+- Run =make= to build git-prompt plus bonus binaries
+- =sudo make install= installs at /usr/local/bin
+- =make clean= cleans things up.
+  
