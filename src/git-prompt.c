@@ -4,10 +4,10 @@
 #include <git2.h>
 
 // defines
-#define COLOR_GIT_CLEAN    "\033[1;30m"
-#define COLOR_GIT_MODIFIED "\033[0;33m"
-#define COLOR_GIT_STAGED   "\033[0;36m"
-#define COLOR_CWD          "\033[01;34m"
+#define COLOR_GIT_CLEAN    "\033[0;32m"  // cyan
+#define COLOR_GIT_MODIFIED "\033[01;33m" // bold yellow
+#define COLOR_GIT_STAGED   "\033[01;31m" // bold red
+#define COLOR_CWD          "\033[1;34m"  // blue
 #define COLOR_RESET        "\033[0m"
 
 // declarations
@@ -16,6 +16,12 @@ const char* findGitRepository(const char *path);
 void printDefaultPrompt();
 
 void printDefaultPrompt() {
+  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
+  if (defaultPrompt) {
+    printf("%s", defaultPrompt);
+    return;
+  } 
+
   char prompt[256];
   snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
   printf("%s", prompt);
@@ -121,6 +127,8 @@ int main() {
   git_reference_free(head_ref);
   git_repository_free(repo);
   git_libgit2_shutdown();
+
+  printf("%s",prompt_git_staged);
 
   return 0;
 }
