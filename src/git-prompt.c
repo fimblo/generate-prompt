@@ -13,6 +13,14 @@
 // declarations
 const char* findGitRepoName(const char* path);
 const char* findGitRepository(const char *path);
+void printDefaultPrompt();
+
+void printDefaultPrompt() {
+  char prompt[256];
+  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
+  printf("%s", prompt);
+}
+
 
 int main() {
   git_libgit2_init();
@@ -20,18 +28,21 @@ int main() {
   // get path to git repo at '.' else return
   const char *git_repository_path = findGitRepository(".");
   if (strlen(git_repository_path) == 0) {
+    printDefaultPrompt();
     return 0;
   }
 
   // get repo else return
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
+    printDefaultPrompt();
     return 0;
   }
 
   // ref to current HEAD of repo else return
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
+    printDefaultPrompt();
     git_repository_free(repo);
     return 1;
   }
