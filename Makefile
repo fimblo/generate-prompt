@@ -11,18 +11,18 @@ BIN_DIR = bin
 # Source files
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
-BIN = $(BIN_DIR)/git-prompt
+BINS = $(patsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%, $(SRCS))
 
 # Targets
 .PHONY: all build install clean
 
 all: build
 
-build: $(BIN)
+build: $(BINS)
 
-$(BIN): $(OBJS)
+$(BIN_DIR)/%: $(BUILD_DIR)/%.o
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(BUILD_DIR)
@@ -33,7 +33,7 @@ install:
 	@install -m 755 $(BIN) /usr/local/bin/
 
 clean:
-	$(RM) -r $(BUILD_DIR) $(BIN)
+	$(RM) -r $(BUILD_DIR) $(BINS)
 
 # No arguments, default to build
 default: build
