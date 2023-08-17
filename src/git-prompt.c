@@ -120,6 +120,10 @@ int main() {
       printf("%s",prompt_git_staged);
     } else if (unstaged_changes) {
       printf("%s",prompt_git_modified);
+    } else {
+      // special case: we have staged AND modified.
+      // in this case, colour as if staged
+      printf("%s",prompt_git_staged);
     }
   }
 
@@ -128,7 +132,6 @@ int main() {
   git_repository_free(repo);
   git_libgit2_shutdown();
 
-  printf("%s",prompt_git_staged);
 
   return 0;
 }
