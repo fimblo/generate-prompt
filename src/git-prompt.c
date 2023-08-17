@@ -15,17 +15,6 @@ const char* findGitRepoName(const char* path);
 const char* findGitRepository(const char *path);
 void printDefaultPrompt();
 
-void printDefaultPrompt() {
-  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
-  if (defaultPrompt) {
-    printf("%s", defaultPrompt);
-    return;
-  } 
-
-  char prompt[256];
-  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
-  printf("%s", prompt);
-}
 
 
 int main() {
@@ -87,9 +76,7 @@ int main() {
            COLOR_RESET,
            prompt_cwd);
 
-
-
-
+  // set up git status 
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
 
@@ -132,10 +119,11 @@ int main() {
   git_repository_free(repo);
   git_libgit2_shutdown();
 
-
   return 0;
 }
 
+
+// return repo name else null
 const char* findGitRepoName(const char* path) {
   git_buf repo_path = { 0 };
   int error = git_repository_discover(&repo_path, path, 0, NULL);
@@ -173,8 +161,7 @@ const char* findGitRepoName(const char* path) {
 
 
 
-// Return an empty string if no repo
-// else the path to the repo
+// Return path to repo else empty string
 const char* findGitRepository(const char *path) {
   git_buf repo_path = { 0 };
   int error = git_repository_discover(&repo_path, path, 0, NULL);
@@ -207,3 +194,18 @@ const char* findGitRepository(const char *path) {
     return strdup("");
   }
 }
+
+
+void printDefaultPrompt() {
+  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
+  if (defaultPrompt) {
+    printf("%s", defaultPrompt);
+    return;
+  } 
+
+  char prompt[256];
+  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
+  printf("%s", prompt);
+}
+
+
