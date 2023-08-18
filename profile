@@ -8,3 +8,5 @@ prompt_cmd() {
   PS1="$(git-prompt)"
 }
 PROMPT_COMMAND=prompt_cmd
+
+export DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
