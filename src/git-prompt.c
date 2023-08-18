@@ -1,12 +1,14 @@
-/* -------------------------------------------------- */
-// includes
+/* --------------------------------------------------
+ * Includes
+ */
 #include <stdio.h>
 #include <string.h>
 #include <git2.h>
 
 
-/* -------------------------------------------------- */
-// enums and colors
+/* --------------------------------------------------
+ * Enums and colors
+ */
 enum states {
   UP_TO_DATE = 1<<0,
   MODIFIED   = 1<<1,
@@ -24,15 +26,17 @@ const char *color[1<<5] = {
 };
 
 
-/* -------------------------------------------------- */
-// declarations
+/* --------------------------------------------------
+ * Declarations
+ */
 const char* findGitRepository(const char *path);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
 
 
-/* -------------------------------------------------- */
-// functions
+/* --------------------------------------------------
+ * Functions
+ */
 int main() {
   git_libgit2_init();
 
@@ -42,7 +46,6 @@ int main() {
     printNonGitPrompt();
     return 0;
   }
-
 
   // if we can't create repo object, print default prompt
   git_repository *repo = NULL;
@@ -82,7 +85,6 @@ int main() {
     status |= UP_TO_DATE;
   }
   else {
-
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_INDEX_NEW || entry->status == GIT_STATUS_INDEX_MODIFIED) {
@@ -104,8 +106,9 @@ int main() {
 }
 
 
-/* -------------------------------------------------- */
-// Return path to repo else empty string
+/* --------------------------------------------------
+ * Return path to repo else empty string
+ */
 const char* findGitRepository(const char *path) {
   git_buf repo_path = { 0 };
   int error = git_repository_discover(&repo_path, path, 0, NULL);
@@ -139,9 +142,10 @@ const char* findGitRepository(const char *path) {
   }
 }
 
-/* -------------------------------------------------- */
-// When standing in a non-git repo, or if the git prompt doesn't work,
-// use this prompt.
+/* --------------------------------------------------
+ * When standing in a non-git repo, or if the git prompt doesn't work,
+ * use this prompt.
+ */
 void printNonGitPrompt() {
   const char *defaultPrompt = getenv("DEFAULT_PROMPT");
   if (defaultPrompt) {
@@ -155,8 +159,9 @@ void printNonGitPrompt() {
 }
 
 
-/* -------------------------------------------------- */
-// When standing in a git-repo, use this prompt
+/* --------------------------------------------------
+ * When standing in a git-repo, use this prompt
+ */
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
   char top_prompt[512];
   const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
@@ -182,4 +187,3 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
 
   printf("%s\n%s", top_prompt, bottom_prompt);
 }
-
