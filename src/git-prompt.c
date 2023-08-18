@@ -29,7 +29,7 @@ const char *color[1<<5] = {
 /* --------------------------------------------------
  * Declarations
  */
-const char* findGitRepository(const char *path);
+const char* findGitRepositoryPath(const char *path);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
 
@@ -41,7 +41,7 @@ int main() {
   git_libgit2_init();
 
   // get path to git repo at '.' else print default prompt
-  const char *git_repository_path = findGitRepository(".");      // "/path/to/projectName"
+  const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
   if (strlen(git_repository_path) == 0) {
     printNonGitPrompt();
     return 0;
@@ -109,7 +109,7 @@ int main() {
 /* --------------------------------------------------
  * Return path to repo else empty string
  */
-const char* findGitRepository(const char *path) {
+const char* findGitRepositoryPath(const char *path) {
   git_buf repo_path = { 0 };
   int error = git_repository_discover(&repo_path, path, 0, NULL);
 
@@ -135,7 +135,7 @@ const char* findGitRepository(const char *path) {
     strncpy(parent_path, path, last_slash - path);
     parent_path[last_slash - path] = '\0';
 
-    return findGitRepository(parent_path);
+    return findGitRepositoryPath(parent_path);
   }
   else {
     return strdup("");
