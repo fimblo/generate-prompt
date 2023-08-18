@@ -22,7 +22,7 @@ While floundering around with this over-verbose language, I wrote
 some other binaries which could be of use at some point. maybe.
 Actually, others have already written these, and they are probably
 much better than these.
-- git-reponame : outputs the repo name, or an empty string
+- git-name : outputs the repo name, or an empty string
 - git-root : outputs the path to the repo root
 ** Dependencies
 libgit2
