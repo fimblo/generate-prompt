@@ -11,7 +11,6 @@
 #define COLOR_RESET      "\033[0m"
 
 // declarations
-const char* findGitRepoName(const char* path);
 const char* findGitRepository(const char *path);
 void printDefaultPrompt();
 
@@ -26,6 +25,7 @@ int main() {
     printDefaultPrompt();
     return 0;
   }
+
 
   // get repo else return
   git_repository *repo = NULL;
@@ -43,7 +43,7 @@ int main() {
   }
 
   // get repo and branch name
-  const char *repo_name = findGitRepoName(".");
+  const char *repo_name = strrchr(git_repository_path, '/') + 1;
   const char *branch_name = git_reference_shorthand(head_ref);
 
   const char *prompt_format = "\[%s\]\[%s%s%s\] %s $ ";
@@ -76,7 +76,7 @@ int main() {
            COLOR_RESET,
            prompt_cwd);
 
-  // set up git status 
+  // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
 
@@ -123,45 +123,6 @@ int main() {
 }
 
 
-// return repo name else null
-const char* findGitRepoName(const char* path) {
-  git_buf repo_path = { 0 };
-  int error = git_repository_discover(&repo_path, path, 0, NULL);
-
-  if (error == 0) {
-    git_repository *repo = NULL;
-    if (git_repository_open(&repo, repo_path.ptr) == 0) {
-
-
-      const char *full_repo_dir = git_repository_commondir(repo);
-      size_t full_repo_dir_len = strlen(full_repo_dir);
-      char *repo_dir = "";
-
-      if (full_repo_dir_len >= 6 && strcmp(full_repo_dir + full_repo_dir_len - 6, "/.git/") == 0) {
-        repo_dir = strndup(full_repo_dir, full_repo_dir_len - 6); // Remove the trailing "/.git/"
-      }
-
-      const char *last_slash = strrchr(repo_dir, '/');
-      if (last_slash) {
-        const char *repo_name = last_slash + 1;
-        git_repository_free(repo);
-        git_buf_dispose(&repo_path);
-
-        char * retval = strdup(repo_name);
-        free(repo_dir);
-        return retval;
-      }
-      free(repo_dir);
-      git_repository_free(repo);
-    }
-  }
-
-  git_buf_dispose(&repo_path);
-  return NULL;
-}
-
-
-
 
 // Return path to repo else empty string
 const char* findGitRepository(const char *path) {
@@ -203,11 +164,9 @@ void printDefaultPrompt() {
   if (defaultPrompt) {
     printf("%s", defaultPrompt);
     return;
-  } 
+  }
 
   char prompt[256];
   snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
   printf("%s", prompt);
 }
-
-
