@@ -19,22 +19,22 @@ void printDefaultPrompt();
 int main() {
   git_libgit2_init();
 
-  // get path to git repo at '.' else return
-  const char *git_repository_path = findGitRepository(".");
+  // get path to git repo at '.' else print default prompt
+  const char *git_repository_path = findGitRepository(".");      // "/path/to/projectName"
   if (strlen(git_repository_path) == 0) {
     printDefaultPrompt();
     return 0;
   }
 
 
-  // get repo else return
+  // if we can't create repo object, print default prompt
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
     printDefaultPrompt();
     return 0;
   }
 
-  // ref to current HEAD of repo else return
+  // if we can't get ref to repo, print defualt prompt
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
     printDefaultPrompt();
@@ -42,8 +42,8 @@ int main() {
     return 1;
   }
 
-  // get repo and branch name
-  const char *repo_name = strrchr(git_repository_path, '/') + 1;
+  // get repo name and branch name
+  const char *repo_name = strrchr(git_repository_path, '/') + 1; // "projectName"
   const char *branch_name = git_reference_shorthand(head_ref);
 
   const char *prompt_format = "\[%s\]\[%s%s%s\] %s $ ";
