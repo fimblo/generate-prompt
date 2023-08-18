@@ -158,8 +158,9 @@ void printNonGitPrompt() {
 /* -------------------------------------------------- */
 // When standing in a git-repo, use this prompt
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
+  char top_prompt[512];
   const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
-  const char *format_bottom = "╰➧$ ";
+  const char *bottom_prompt = "╰➧$ ";
 
   // figure out what status to use
   int opt = 0;
@@ -170,7 +171,6 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
     opt = status;
   }
 
-  char top_prompt[512];
   snprintf(top_prompt, sizeof(top_prompt),
            format_top,
            repo_name,
@@ -180,9 +180,6 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
            color[CWD],
            color[RESET]);
 
-
-  printf("%s\n", top_prompt);
-  printf("%s",format_bottom);
-
+  printf("%s\n%s", top_prompt, bottom_prompt);
 }
 
