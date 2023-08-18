@@ -26,6 +26,10 @@ const char *color[1<<5] = {
 const char* findGitRepository(const char *path);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
+size_t stripped_strlen(const char *str);
+
+
+
 
 
 int main() {
@@ -147,17 +151,20 @@ void printNonGitPrompt() {
 
 
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
-  const char *format = "\[%s\]\[%s%s%s\] %s\\W%s $ ";
+  const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
+  const char *format_bottom = "╰➧$ ";
 
+  // figure out what status to use
   int opt = 0;
   if ((status & MODIFIED) && (status & STAGED)) {
     opt |= STAGED;
   } else {
     opt = status;
   }
-  char prompt_status[512];
-  snprintf(prompt_status, sizeof(prompt_status),
-           format,
+
+  char top_prompt[512];
+  snprintf(top_prompt, sizeof(top_prompt),
+           format_top,
            repo_name,
            color[opt],
            branch_name,
@@ -165,5 +172,25 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
            color[CWD],
            color[RESET]);
 
-  printf("%s", prompt_status);
+
+  printf("%s\n", top_prompt);
+  printf("%s",format_bottom);
+
+}
+
+size_t stripped_strlen(const char *str) {
+  size_t len = 0;
+  int in_escape = 0;
+
+  for (const char *p = str; *p != '\0'; ++p) {
+    if (*p == '\033') { // Check for escape character
+      in_escape = 1;
+    } else if (in_escape && *p == 'm') { // Check for end of escape sequence
+      in_escape = 0;
+    } else if (!in_escape) { // If not in escape sequence, count as character
+      len++;
+    }
+  }
+
+  return len;
 }
