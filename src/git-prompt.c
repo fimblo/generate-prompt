@@ -29,10 +29,6 @@ const char *color[1<<5] = {
 const char* findGitRepository(const char *path);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
-size_t stripped_strlen(const char *str);
-
-
-
 
 
 /* -------------------------------------------------- */
@@ -190,19 +186,3 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
 
 }
 
-size_t stripped_strlen(const char *str) {
-  size_t len = 0;
-  int in_escape = 0;
-
-  for (const char *p = str; *p != '\0'; ++p) {
-    if (*p == '\033') { // Check for escape character
-      in_escape = 1;
-    } else if (in_escape && *p == 'm') { // Check for end of escape sequence
-      in_escape = 0;
-    } else if (!in_escape) { // If not in escape sequence, count as character
-      len++;
-    }
-  }
-
-  return len;
-}
