@@ -1,10 +1,12 @@
+/* -------------------------------------------------- */
 // includes
 #include <stdio.h>
 #include <string.h>
 #include <git2.h>
 
-// enums and colors
 
+/* -------------------------------------------------- */
+// enums and colors
 enum states {
   UP_TO_DATE = 1<<0,
   MODIFIED   = 1<<1,
@@ -12,7 +14,6 @@ enum states {
   CWD        = 1<<3,
   RESET      = 1<<4,
 };
-
 
 const char *color[1<<5] = {
   [ UP_TO_DATE ] =  "\033[0;32m",  // UP_TO_DATE - cyan
@@ -22,6 +23,8 @@ const char *color[1<<5] = {
   [ RESET      ] =  "\033[0m"      // RESET      - RESET to default
 };
 
+
+/* -------------------------------------------------- */
 // declarations
 const char* findGitRepository(const char *path);
 void printNonGitPrompt();
@@ -32,6 +35,8 @@ size_t stripped_strlen(const char *str);
 
 
 
+/* -------------------------------------------------- */
+// functions
 int main() {
   git_libgit2_init();
 
@@ -79,7 +84,8 @@ int main() {
   int status = 0;
   if (status_count == 0) {
     status |= UP_TO_DATE;
-  } else {
+  }
+  else {
 
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
@@ -102,7 +108,7 @@ int main() {
 }
 
 
-
+/* -------------------------------------------------- */
 // Return path to repo else empty string
 const char* findGitRepository(const char *path) {
   git_buf repo_path = { 0 };
@@ -137,6 +143,9 @@ const char* findGitRepository(const char *path) {
   }
 }
 
+/* -------------------------------------------------- */
+// When standing in a non-git repo, or if the git prompt doesn't work,
+// use this prompt.
 void printNonGitPrompt() {
   const char *defaultPrompt = getenv("DEFAULT_PROMPT");
   if (defaultPrompt) {
@@ -150,6 +159,8 @@ void printNonGitPrompt() {
 }
 
 
+/* -------------------------------------------------- */
+// When standing in a git-repo, use this prompt
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
   const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
   const char *format_bottom = "╰➧$ ";
@@ -158,7 +169,8 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
   int opt = 0;
   if ((status & MODIFIED) && (status & STAGED)) {
     opt |= STAGED;
-  } else {
+  }
+  else {
     opt = status;
   }
 
