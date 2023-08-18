@@ -4,11 +4,11 @@
 #include <git2.h>
 
 // defines
-#define COLOR_GIT_CLEAN    "\033[0;32m"  // cyan
-#define COLOR_GIT_MODIFIED "\033[01;33m" // bold yellow
-#define COLOR_GIT_STAGED   "\033[01;31m" // bold red
-#define COLOR_CWD          "\033[1;34m"  // blue
-#define COLOR_RESET        "\033[0m"
+#define COLOR_UP_TO_DATE "\033[0;32m"  // cyan
+#define COLOR_MODIFIED   "\033[01;33m" // bold yellow
+#define COLOR_STAGED     "\033[01;31m" // bold red
+#define COLOR_CWD        "\033[1;34m"  // blue
+#define COLOR_RESET      "\033[0m"
 
 // declarations
 const char* findGitRepoName(const char* path);
@@ -51,27 +51,27 @@ int main() {
   char prompt_cwd[256];
   snprintf(prompt_cwd, sizeof(prompt_cwd), "%s\\W%s", COLOR_CWD, COLOR_RESET);
 
-  char prompt_git_clean[512];
-  snprintf(prompt_git_clean, sizeof(prompt_git_clean),
+  char prompt_up_to_date[512];
+  snprintf(prompt_up_to_date, sizeof(prompt_up_to_date),
            prompt_format,
            repo_name,
-           COLOR_GIT_CLEAN,
+           COLOR_UP_TO_DATE,
            branch_name,
            COLOR_RESET,
            prompt_cwd);
-  char prompt_git_modified[512];
-  snprintf(prompt_git_modified, sizeof(prompt_git_modified),
+  char prompt_modified[512];
+  snprintf(prompt_modified, sizeof(prompt_modified),
            prompt_format,
            repo_name,
-           COLOR_GIT_MODIFIED,
+           COLOR_MODIFIED,
            branch_name,
            COLOR_RESET,
            prompt_cwd);
-  char prompt_git_staged[512];
-  snprintf(prompt_git_staged, sizeof(prompt_git_staged),
+  char prompt_staged[512];
+  snprintf(prompt_staged, sizeof(prompt_staged),
            prompt_format,
            repo_name,
-           COLOR_GIT_STAGED,
+           COLOR_STAGED,
            branch_name,
            COLOR_RESET,
            prompt_cwd);
@@ -89,7 +89,7 @@ int main() {
 
   int status_count = git_status_list_entrycount(status_list);
   if (status_count == 0) {
-    printf("%s",prompt_git_clean);
+    printf("%s",prompt_up_to_date);
   } else {
     int i;
     int staged_changes = 0;
@@ -104,13 +104,13 @@ int main() {
       }
     }
     if (staged_changes) {
-      printf("%s",prompt_git_staged);
+      printf("%s",prompt_staged);
     } else if (unstaged_changes) {
-      printf("%s",prompt_git_modified);
+      printf("%s",prompt_modified);
     } else {
       // special case: we have staged AND modified.
       // in this case, colour as if staged
-      printf("%s",prompt_git_staged);
+      printf("%s",prompt_staged);
     }
   }
 
