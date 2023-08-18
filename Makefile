@@ -3,6 +3,15 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDFLAGS = -lgit2
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    CFLAGS += -I/opt/homebrew/include/
+	LDFLAGS += -L/opt/homebrew/lib
+endif
+ifeq ($(UNAME_S),Linux)
+    CFLAGS += -I/usr/include/
+endif
+
 # Directories
 SRC_DIR = src
 BUILD_DIR = build
