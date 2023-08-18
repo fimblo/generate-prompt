@@ -3,31 +3,29 @@
 #include <string.h>
 #include <git2.h>
 
-// defines
+// enums and colors
 
-#define up_to_date 0
-#define modified   1
-#define staged     2
-#define cwd        3
-#define reset      4
+enum states {
+  UP_TO_DATE = 1<<0,
+  MODIFIED   = 1<<1,
+  STAGED     = 1<<2,
+  CWD        = 1<<3,
+  RESET      = 1<<4,
+};
 
-const char *color[5] = {
-  "\033[0;32m",  // up_to_date - cyan
-  "\033[01;33m", // modified   - bold yellow
-  "\033[01;31m", // staged     - bold red
-  "\033[1;34m",  // cwd        - blue
-  "\033[0m"      // reset      - reset to default
+
+const char *color[1<<5] = {
+  [ UP_TO_DATE ] =  "\033[0;32m",  // UP_TO_DATE - cyan
+  [ MODIFIED   ] =  "\033[01;33m", // MODIFIED   - bold yellow
+  [ STAGED     ] =  "\033[01;31m", // STAGED     - bold red
+  [ CWD        ] =  "\033[1;34m",  // CWD        - blue
+  [ RESET      ] =  "\033[0m"      // RESET      - RESET to default
 };
 
 // declarations
 const char* findGitRepository(const char *path);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
-
-
-
-
-
 
 
 int main() {
@@ -61,7 +59,6 @@ int main() {
   const char *branch_name = git_reference_shorthand(head_ref);
 
 
-
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
@@ -76,12 +73,12 @@ int main() {
 
   int status_count = git_status_list_entrycount(status_list);
   if (status_count == 0) {
-    printPrompt(repo_name, branch_name, up_to_date);
+    printPrompt(repo_name, branch_name, UP_TO_DATE);
   } else {
-    int i;
-    int staged_changes = 0;
+
+    int staged_changes   = 0;
     int modified_changes = 0;
-    for (i = 0; i < status_count; i++) {
+    for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_INDEX_NEW || entry->status == GIT_STATUS_INDEX_MODIFIED) {
         staged_changes = 1;
@@ -90,14 +87,12 @@ int main() {
         modified_changes = 1;
       }
     }
-    if (staged_changes) {
-      printPrompt(repo_name, branch_name, staged);
-    } else if (modified_changes) {
-      printPrompt(repo_name, branch_name, modified);
-    } else {
-      // special case: we have staged AND modified.
-      // in this case, colour as if staged
-      printPrompt(repo_name, branch_name, staged);
+    if (staged_changes)        { printPrompt(repo_name, branch_name, STAGED);   }
+    else if (modified_changes) { printPrompt(repo_name, branch_name, MODIFIED); }
+    else {
+      // special case: we have STAGED AND MODIFIED.
+      // in this case, colour as if STAGED
+      printPrompt(repo_name, branch_name, STAGED);
     }
   }
 
@@ -153,7 +148,7 @@ void printNonGitPrompt() {
   }
 
   char prompt[256];
-  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", color[cwd], color[reset]);
+  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", color[CWD], color[RESET]);
   printf("%s", prompt);
 }
 
@@ -167,10 +162,9 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
            repo_name,
            color[status],
            branch_name,
-           color[reset],
-           color[cwd],
-           color[reset]);
+           color[RESET],
+           color[CWD],
+           color[RESET]);
 
   printf("%s", prompt_status);
 }
-
