@@ -4,82 +4,28 @@
 #include <git2.h>
 
 // defines
-#define COLOR_UP_TO_DATE "\033[0;32m"  // cyan
-#define COLOR_MODIFIED   "\033[01;33m" // bold yellow  
-#define COLOR_STAGED     "\033[01;31m" // bold red
-#define COLOR_CWD        "\033[1;34m"  // blue
-#define COLOR_RESET      "\033[0m"
 
 #define up_to_date 0
 #define modified   1
 #define staged     2
+#define cwd        3
+#define reset      4
 
+const char *color[5] = {
+  "\033[0;32m",  // up_to_date - cyan
+  "\033[01;33m", // modified   - bold yellow
+  "\033[01;31m", // staged     - bold red
+  "\033[1;34m",  // cwd        - blue
+  "\033[0m"      // reset      - reset to default
+};
 
 // declarations
 const char* findGitRepository(const char *path);
-void printDefaultPrompt();
+void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
 
 
 
-
-
-void printDefaultPrompt() {
-  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
-  if (defaultPrompt) {
-    printf("%s", defaultPrompt);
-    return;
-  }
-
-  char prompt[256];
-  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
-  printf("%s", prompt);
-}
-
-
-
-
-
-
-
-void printPrompt(const char *repo_name, const char *branch_name, const int status) {
-  const char *prompt_format = "\[%s\]\[%s%s%s\] %s $ ";
-
-  char prompt_cwd[256];
-  snprintf(prompt_cwd, sizeof(prompt_cwd), "%s\\W%s", COLOR_CWD, COLOR_RESET);
-
-  char prompt_up_to_date[512];
-  snprintf(prompt_up_to_date, sizeof(prompt_up_to_date),
-           prompt_format,
-           repo_name,
-           COLOR_UP_TO_DATE,
-           branch_name,
-           COLOR_RESET,
-           prompt_cwd);
-  char prompt_modified[512];
-  snprintf(prompt_modified, sizeof(prompt_modified),
-           prompt_format,
-           repo_name,
-           COLOR_MODIFIED,
-           branch_name,
-           COLOR_RESET,
-           prompt_cwd);
-  char prompt_staged[512];
-  snprintf(prompt_staged, sizeof(prompt_staged),
-           prompt_format,
-           repo_name,
-           COLOR_STAGED,
-           branch_name,
-           COLOR_RESET,
-           prompt_cwd);
-
-  if (status == up_to_date) { printf("%s", prompt_up_to_date); }
-  else if (status == modified) { printf("%s", prompt_modified); }
-  else if (status == staged) { printf("%s", prompt_staged); }
-  else {
-    printf("This should not have happened.");
-  }
-}
 
 
 
@@ -90,7 +36,7 @@ int main() {
   // get path to git repo at '.' else print default prompt
   const char *git_repository_path = findGitRepository(".");      // "/path/to/projectName"
   if (strlen(git_repository_path) == 0) {
-    printDefaultPrompt();
+    printNonGitPrompt();
     return 0;
   }
 
@@ -98,14 +44,14 @@ int main() {
   // if we can't create repo object, print default prompt
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
-    printDefaultPrompt();
+    printNonGitPrompt();
     return 0;
   }
 
   // if we can't get ref to repo, print defualt prompt
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
-    printDefaultPrompt();
+    printNonGitPrompt();
     git_repository_free(repo);
     return 1;
   }
@@ -124,7 +70,7 @@ int main() {
   if (git_status_list_new(&status_list, repo, &opts) != 0) {
     git_reference_free(head_ref);
     git_repository_free(repo);
-    printDefaultPrompt();
+    printNonGitPrompt();
     return 1;
   }
 
@@ -198,3 +144,33 @@ const char* findGitRepository(const char *path) {
     return strdup("");
   }
 }
+
+void printNonGitPrompt() {
+  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
+  if (defaultPrompt) {
+    printf("%s", defaultPrompt);
+    return;
+  }
+
+  char prompt[256];
+  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", color[cwd], color[reset]);
+  printf("%s", prompt);
+}
+
+
+void printPrompt(const char *repo_name, const char *branch_name, const int status) {
+  const char *format = "\[%s\]\[%s%s%s\] %s\\W%s $ ";
+
+  char prompt_status[512];
+  snprintf(prompt_status, sizeof(prompt_status),
+           format,
+           repo_name,
+           color[status],
+           branch_name,
+           color[reset],
+           color[cwd],
+           color[reset]);
+
+  printf("%s", prompt_status);
+}
+
