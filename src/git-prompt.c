@@ -84,6 +84,7 @@ int main() {
   if (git_status_list_new(&status_list, repo, &opts) != 0) {
     git_reference_free(head_ref);
     git_repository_free(repo);
+    printDefaultPrompt();
     return 1;
   }
 
