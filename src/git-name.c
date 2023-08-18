@@ -20,12 +20,15 @@ const char* findGitRepoName(const char* path) {
       }
 
       const char *last_slash = strrchr(repo_dir, '/');
+      
       if (last_slash) {
         const char *repo_name = last_slash + 1;
-        free(repo_dir);
         git_repository_free(repo);
         git_buf_dispose(&repo_path);
-        return repo_name;
+
+        char * retval = strdup(repo_name);
+        free(repo_dir);
+        return retval;
       }
       free(repo_dir);
       git_repository_free(repo);
@@ -35,7 +38,7 @@ const char* findGitRepoName(const char* path) {
   }
 
   git_buf_dispose(&repo_path);
-  return NULL;
+  return strdup("");
 }
 
 int main() {
@@ -47,6 +50,7 @@ int main() {
     printf("%s\n", repo_name);
   }
 
+  free(repo_name);
   git_libgit2_shutdown();
 
   return 0;

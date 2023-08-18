@@ -144,10 +144,12 @@ const char* findGitRepoName(const char* path) {
       const char *last_slash = strrchr(repo_dir, '/');
       if (last_slash) {
         const char *repo_name = last_slash + 1;
-        free(repo_dir);
         git_repository_free(repo);
         git_buf_dispose(&repo_path);
-        return repo_name;
+
+        char * retval = strdup(repo_name);
+        free(repo_dir);
+        return retval;
       }
       free(repo_dir);
       git_repository_free(repo);
