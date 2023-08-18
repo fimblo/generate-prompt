@@ -72,29 +72,22 @@ int main() {
   }
 
   int status_count = git_status_list_entrycount(status_list);
+  int status = 0;
   if (status_count == 0) {
-    printPrompt(repo_name, branch_name, UP_TO_DATE);
+    status |= UP_TO_DATE;
   } else {
 
-    int staged_changes   = 0;
-    int modified_changes = 0;
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_INDEX_NEW || entry->status == GIT_STATUS_INDEX_MODIFIED) {
-        staged_changes = 1;
+        status |= STAGED;
       }
       if (entry->status == GIT_STATUS_WT_MODIFIED) {
-        modified_changes = 1;
+        status |= MODIFIED;
       }
     }
-    if (staged_changes)        { printPrompt(repo_name, branch_name, STAGED);   }
-    else if (modified_changes) { printPrompt(repo_name, branch_name, MODIFIED); }
-    else {
-      // special case: we have STAGED AND MODIFIED.
-      // in this case, colour as if STAGED
-      printPrompt(repo_name, branch_name, STAGED);
-    }
   }
+  printPrompt(repo_name, branch_name, status);
 
   git_status_list_free(status_list);
   git_reference_free(head_ref);
@@ -156,11 +149,17 @@ void printNonGitPrompt() {
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
   const char *format = "\[%s\]\[%s%s%s\] %s\\W%s $ ";
 
+  int opt = 0;
+  if ((status & MODIFIED) && (status & STAGED)) {
+    opt |= STAGED;
+  } else {
+    opt = status;
+  }
   char prompt_status[512];
   snprintf(prompt_status, sizeof(prompt_status),
            format,
            repo_name,
-           color[status],
+           color[opt],
            branch_name,
            color[RESET],
            color[CWD],
