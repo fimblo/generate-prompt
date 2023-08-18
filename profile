@@ -1,7 +1,7 @@
 # -*- mode: shell-script -*-
 #
 # usage:
-#  $ source $git_profile
+#  $ source profile
 
 prompt_cmd() {
   # This assumes that the binary git-prompt has been copied into PATH
@@ -9,4 +9,25 @@ prompt_cmd() {
 }
 PROMPT_COMMAND=prompt_cmd
 
-export DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
+
+# If you want to override the default prompt, which will be shown when
+# outside of a git repo, uncomment this row. You can change this as
+# you see fit, as if it was your normal PS1 variable.
+#
+# export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
+
+
+# If you want to override the way the prompt looks inside of a git
+# repo, then you'll need to set all four of these environment
+# variables.
+#
+# This first envvar needs to be set to anything other than the empty
+# string. If it is unset, the remaining three envvars will not be
+# used.
+# export GP_USE_GIT_PROMPTS_FROM_ENV="true"
+#
+# These three can be modified to your heart's extent.
+# export GP_UP_TO_DATE_PROMPT="UPTODATE: repo: repo_name, branch: branch_name $ ";
+# export GP_MODIFIED_PROMPT="MODIFIED: repo: repo_name, branch: branch_name $ ";
+# export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
+

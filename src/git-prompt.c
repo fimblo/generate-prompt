@@ -30,6 +30,7 @@ const char *color[1<<5] = {
  * Declarations
  */
 const char* findGitRepositoryPath(const char *path);
+const char* substitute (const char * text, const char * search, const char * replacement);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
 
@@ -147,7 +148,7 @@ const char* findGitRepositoryPath(const char *path) {
  * use this prompt.
  */
 void printNonGitPrompt() {
-  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
+  const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT");
   if (defaultPrompt) {
     printf("%s", defaultPrompt);
     return;
@@ -163,10 +164,6 @@ void printNonGitPrompt() {
  * When standing in a git-repo, use this prompt
  */
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
-  char top_prompt[512];
-  const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
-  const char *bottom_prompt = "╰➧$ ";
-
   // figure out what status to use
   int opt = 0;
   if ((status & MODIFIED) && (status & STAGED)) {
@@ -176,14 +173,63 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
     opt = status;
   }
 
-  snprintf(top_prompt, sizeof(top_prompt),
-           format_top,
-           repo_name,
-           color[opt],
-           branch_name,
-           color[RESET],
-           color[CWD],
-           color[RESET]);
+  if (getenv("GP_USE_GIT_PROMPTS_FROM_ENV")) {
+    if (status & UP_TO_DATE) {
+      const char *prompt_up_to_date = substitute(getenv("GP_UP_TO_DATE_PROMPT"), "repo_name", repo_name);
+      prompt_up_to_date = substitute(prompt_up_to_date, "branch_name", branch_name);
+      printf("%s", prompt_up_to_date);
+    }
+    else if (status & MODIFIED) {
+      const char *prompt_modified = substitute(getenv("GP_MODIFIED_PROMPT"), "repo_name", repo_name);
+      prompt_modified = substitute(prompt_modified, "branch_name", branch_name);
+      printf("%s", prompt_modified);
+    }
+    else {
+      const char *prompt_staged = substitute(getenv("GP_STAGED_PROMPT"), "repo_name", repo_name);
+      prompt_staged = substitute(prompt_staged, "branch_name", branch_name);
+      printf("%s", prompt_staged);
+    }
+  }
+  else {
+    char top_prompt[512];
+    const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
+    const char *bottom_prompt = "╰➧$ ";
 
-  printf("%s\n%s", top_prompt, bottom_prompt);
+    snprintf(top_prompt, sizeof(top_prompt),
+             format_top,
+             repo_name,
+             color[opt],
+             branch_name,
+             color[RESET],
+             color[CWD],
+             color[RESET]);
+
+    printf("%s\n%s", top_prompt, bottom_prompt);
+  }
+}
+
+
+/* --------------------------------------------------
+ * Helper: substitute
+ */
+const char * substitute (const char * text, const char * search, const char * replacement) {
+  char *message = strdup(text);
+  char *found = strstr(message, search);
+
+  if (found) {
+    size_t prefix_length = found - message;
+    size_t suffix_length = strlen(found + strlen(search));
+
+    size_t new_length = prefix_length + strlen(replacement) + suffix_length + 1;
+    char temp[new_length];  // Use a temporary array
+
+    strncpy(temp, message, prefix_length);
+    strcpy(temp + prefix_length, replacement);
+    strcpy(temp + prefix_length + strlen(replacement), found + strlen(search));
+
+    strcpy(message, temp);  // Copy the modified string back to 'message'
+  }
+
+  return message;
+
 }
