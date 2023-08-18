@@ -5,14 +5,82 @@
 
 // defines
 #define COLOR_UP_TO_DATE "\033[0;32m"  // cyan
-#define COLOR_MODIFIED   "\033[01;33m" // bold yellow
+#define COLOR_MODIFIED   "\033[01;33m" // bold yellow  
 #define COLOR_STAGED     "\033[01;31m" // bold red
 #define COLOR_CWD        "\033[1;34m"  // blue
 #define COLOR_RESET      "\033[0m"
 
+#define up_to_date 0
+#define modified   1
+#define staged     2
+
+
 // declarations
 const char* findGitRepository(const char *path);
 void printDefaultPrompt();
+void printPrompt(const char *repo_name, const char *branch_name, const int status);
+
+
+
+
+
+void printDefaultPrompt() {
+  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
+  if (defaultPrompt) {
+    printf("%s", defaultPrompt);
+    return;
+  }
+
+  char prompt[256];
+  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
+  printf("%s", prompt);
+}
+
+
+
+
+
+
+
+void printPrompt(const char *repo_name, const char *branch_name, const int status) {
+  const char *prompt_format = "\[%s\]\[%s%s%s\] %s $ ";
+
+  char prompt_cwd[256];
+  snprintf(prompt_cwd, sizeof(prompt_cwd), "%s\\W%s", COLOR_CWD, COLOR_RESET);
+
+  char prompt_up_to_date[512];
+  snprintf(prompt_up_to_date, sizeof(prompt_up_to_date),
+           prompt_format,
+           repo_name,
+           COLOR_UP_TO_DATE,
+           branch_name,
+           COLOR_RESET,
+           prompt_cwd);
+  char prompt_modified[512];
+  snprintf(prompt_modified, sizeof(prompt_modified),
+           prompt_format,
+           repo_name,
+           COLOR_MODIFIED,
+           branch_name,
+           COLOR_RESET,
+           prompt_cwd);
+  char prompt_staged[512];
+  snprintf(prompt_staged, sizeof(prompt_staged),
+           prompt_format,
+           repo_name,
+           COLOR_STAGED,
+           branch_name,
+           COLOR_RESET,
+           prompt_cwd);
+
+  if (status == up_to_date) { printf("%s", prompt_up_to_date); }
+  else if (status == modified) { printf("%s", prompt_modified); }
+  else if (status == staged) { printf("%s", prompt_staged); }
+  else {
+    printf("This should not have happened.");
+  }
+}
+
 
 
 
@@ -46,35 +114,7 @@ int main() {
   const char *repo_name = strrchr(git_repository_path, '/') + 1; // "projectName"
   const char *branch_name = git_reference_shorthand(head_ref);
 
-  const char *prompt_format = "\[%s\]\[%s%s%s\] %s $ ";
 
-  char prompt_cwd[256];
-  snprintf(prompt_cwd, sizeof(prompt_cwd), "%s\\W%s", COLOR_CWD, COLOR_RESET);
-
-  char prompt_up_to_date[512];
-  snprintf(prompt_up_to_date, sizeof(prompt_up_to_date),
-           prompt_format,
-           repo_name,
-           COLOR_UP_TO_DATE,
-           branch_name,
-           COLOR_RESET,
-           prompt_cwd);
-  char prompt_modified[512];
-  snprintf(prompt_modified, sizeof(prompt_modified),
-           prompt_format,
-           repo_name,
-           COLOR_MODIFIED,
-           branch_name,
-           COLOR_RESET,
-           prompt_cwd);
-  char prompt_staged[512];
-  snprintf(prompt_staged, sizeof(prompt_staged),
-           prompt_format,
-           repo_name,
-           COLOR_STAGED,
-           branch_name,
-           COLOR_RESET,
-           prompt_cwd);
 
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
@@ -90,28 +130,28 @@ int main() {
 
   int status_count = git_status_list_entrycount(status_list);
   if (status_count == 0) {
-    printf("%s",prompt_up_to_date);
+    printPrompt(repo_name, branch_name, up_to_date);
   } else {
     int i;
     int staged_changes = 0;
-    int unstaged_changes = 0;
+    int modified_changes = 0;
     for (i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_INDEX_NEW || entry->status == GIT_STATUS_INDEX_MODIFIED) {
         staged_changes = 1;
       }
       if (entry->status == GIT_STATUS_WT_MODIFIED) {
-        unstaged_changes = 1;
+        modified_changes = 1;
       }
     }
     if (staged_changes) {
-      printf("%s",prompt_staged);
-    } else if (unstaged_changes) {
-      printf("%s",prompt_modified);
+      printPrompt(repo_name, branch_name, staged);
+    } else if (modified_changes) {
+      printPrompt(repo_name, branch_name, modified);
     } else {
       // special case: we have staged AND modified.
       // in this case, colour as if staged
-      printf("%s",prompt_staged);
+      printPrompt(repo_name, branch_name, staged);
     }
   }
 
@@ -157,17 +197,4 @@ const char* findGitRepository(const char *path) {
   else {
     return strdup("");
   }
-}
-
-
-void printDefaultPrompt() {
-  const char *defaultPrompt = getenv("DEFAULT_PROMPT");
-  if (defaultPrompt) {
-    printf("%s", defaultPrompt);
-    return;
-  }
-
-  char prompt[256];
-  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", COLOR_CWD, COLOR_RESET);
-  printf("%s", prompt);
 }
