@@ -2,10 +2,24 @@
 Simple and fast git prompt
 ** I wrote this because
 - I'm a bash user, and
-- bash functions to update the prompt is just too slow
+- bash functions to update the prompt when standing in a git repo is
+  just too slow
+
 ** What does git-prompt do?
-It prints a useful prompt, for easy plugging into PS1.
-** Usage
+- It prints a useful prompt, for easy plugging into PS1.
+- It can tell if you're standing in a git repo or if you're outside of
+  one. Depending on the situation, it will use one of the two main
+  prompt types.
+- If you're in a git repo, it will by default show you:
+  - the name of the repo
+  - the name of the branch
+  - the basename of your current working directory
+- It allows you to modify the prompt to your liking (advanced usage).
+
+** Usage (basic)
+Source the contents of =profile= into your bash shell. There's a lot
+of stuff in there, mostly commented, but the core of it is:
+
 #+begin_src bash
   prompt_cmd() {
     PS1="$(/path/to/git-prompt)"
@@ -13,16 +27,43 @@ It prints a useful prompt, for easy plugging into PS1.
   PROMPT_COMMAND=prompt_cmd
 #+end_src
 
-If you export the environment variable DEFAULT_PROMPT, and set the
-prompt you want outside of a git repo, this will be used. If you
-don't, there's a simple default it will use.
+** Usage (advanced)
+If you want to override the default prompt, which will be shown when
+outside of a git repo, export this variable. You can change this as
+you see fit, as if it was your normal PS1 variable.
+
+#+begin_src bash
+export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
+#+end_src
+
+If you want to override the way the prompt looks inside of a git
+repo, then you'll need to set all four of these environment
+variables.
+
+This first envvar needs to be set to anything other than the empty
+string. If it is unset, the remaining three envvars will not be
+used.
+#+begin_src bash
+export GP_USE_GIT_PROMPTS_FROM_ENV="true"
+#+end_src
+
+
+These three can be modified to your heart's extent, assuming the above
+envvar has been set.
+
+#+begin_src bash
+export GP_UP_TO_DATE_PROMPT="UPTODATE: repo: repo_name, branch: branch_name $ ";
+export GP_MODIFIED_PROMPT="MODIFIED: repo: repo_name, branch: branch_name $ ";
+export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
+#+end_src
+
 
 ** Bonus
-While floundering around with this over-verbose language, I wrote
-some other binaries which could be of use at some point. maybe.
-Actually, others have already written these, and they are probably
-much better than these.
-- git-name : outputs the repo name, or an empty string
+While floundering around with this over-verbose and low-level
+language, I wrote some other binaries which could be of use at some
+point. Maybe. Actually, others have already written these, and they
+are almost certainly much better than these.
+- git-name : outputs the repo name
 - git-root : outputs the path to the repo root
 ** Dependencies
 libgit2
