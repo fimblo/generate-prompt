@@ -191,12 +191,11 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
     }
   }
   else {
-    char top_prompt[512];
-    const char *format_top    = "╭── \[%s\]\[%s%s%s\] %s\\W%s ";
-    const char *bottom_prompt = "╰➧$ ";
+    char prompt[512];
+    const char *format = "╭── \[%s\]\[%s%s%s\] %s\\W%s\n╰➧$ ";
 
-    snprintf(top_prompt, sizeof(top_prompt),
-             format_top,
+    snprintf(prompt, sizeof(prompt),
+             format,
              repo_name,
              color[opt],
              branch_name,
@@ -204,7 +203,7 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
              color[CWD],
              color[RESET]);
 
-    printf("%s\n%s", top_prompt, bottom_prompt);
+    printf("%s", prompt);
   }
 }
 
