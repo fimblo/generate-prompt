@@ -154,9 +154,7 @@ void printNonGitPrompt() {
     return;
   }
 
-  char prompt[256];
-  snprintf(prompt, sizeof(prompt), "%s\\W%s $ ", color[CWD], color[RESET]);
-  printf("%s", prompt);
+  printf( "%s\\W%s $ ", color[CWD], color[RESET]);
 }
 
 
