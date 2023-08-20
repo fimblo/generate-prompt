@@ -6,10 +6,15 @@
   profiles to source as examples.
 
 ** Details/Refactor/Do Differently [5/7]
-- [X] Rename git-prompt to something like prompt-gen, since it doesn't
-  have to be only for git.
-- [X] Simplify default prompt format. Complications can be done by user,
-  and code will be cleaner
+- [ ] Found another bug: when file is marked for deletion, the prompt
+  gets confused. I'm guessing there are other edge cases. The solution
+  is almost certainly in the same place as when I had a file marked as
+  modified _and_ staged.
+- [ ] Re-write printPrompt
+  - Take correct prompt string from env, then step through it. Normal
+    characters are copied directly into the target string. If a '\' is
+    detected,that and following 2 chars are studied. If one of the
+    above, add correct string (repo name or branch) to target string.
 - [ ] Re-write printPrompt substitutions
   - Use \p as a indicator to signal intent to generate-prompt. The \p
     will always be followed by one more character denoting the type of
@@ -22,17 +27,17 @@
   - \pn - Replace with git repository name
   - \pb - Replace with git branch (short) name
   - Other \pX ideas could be - # of commits ahead or behind, etc    
-- [ ] Re-write printPrompt
-  - Take correct prompt string from env, then step through it. Normal
-    characters are copied directly into the target string. If a '\' is
-    detected,that and following 2 chars are studied. If one of the
-    above, add correct string (repo name or branch) to target string.
+- [X] Rename git-prompt to something like prompt-gen, since it doesn't
+  have to be only for git.
+- [X] Simplify default prompt format. Complications can be done by user,
+  and code will be cleaner
 - [X] Remove bonus programs, they can be in another repo.
   moved to github/fimblo/c-scraps
 - [X] use '#' if user is root
   Useful, but I don't think I want to run any unnecessary programs as root.
+
 - [X] when a repo is in state "staged" and "modified", it looks like this:
-#+begin_src shell
-  [dot.emacs/(null)master] .emacs.d
-  $
-#+end_src
+   #+begin_src shell
+     [dot.emacs/(null)master] .emacs.d
+     $
+   #+end_src
