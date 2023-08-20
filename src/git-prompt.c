@@ -165,28 +165,19 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
   // figure out what status to use
   int opt = 0;
   if ((status & MODIFIED) && (status & STAGED)) {
-    opt |= STAGED;
+    opt |= STAGED; // set as staged if both modified and staged
   }
   else {
     opt = status;
   }
 
   if (getenv("GP_USE_GIT_PROMPTS_FROM_ENV")) {
-    if (status & UP_TO_DATE) {
-      const char *prompt_up_to_date = substitute(getenv("GP_UP_TO_DATE_PROMPT"), "repo_name", repo_name);
-      prompt_up_to_date = substitute(prompt_up_to_date, "branch_name", branch_name);
-      printf("%s", prompt_up_to_date);
-    }
-    else if (status & MODIFIED) {
-      const char *prompt_modified = substitute(getenv("GP_MODIFIED_PROMPT"), "repo_name", repo_name);
-      prompt_modified = substitute(prompt_modified, "branch_name", branch_name);
-      printf("%s", prompt_modified);
-    }
-    else {
-      const char *prompt_staged = substitute(getenv("GP_STAGED_PROMPT"), "repo_name", repo_name);
-      prompt_staged = substitute(prompt_staged, "branch_name", branch_name);
-      printf("%s", prompt_staged);
-    }
+    const char * pp;
+    if      (status & UP_TO_DATE)      { pp = getenv("GP_UP_TO_DATE_PROMPT"); }
+    else if (status & MODIFIED)        { pp = getenv("GP_MODIFIED_PROMPT");   }
+    else     /* staged AND modified */ { pp = getenv("GP_STAGED_PROMPT");     }
+
+    printf("%s",substitute(substitute(pp, "repo_name", repo_name), "branch_name", branch_name));
   }
   else {
     char prompt[512];
