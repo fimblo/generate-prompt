@@ -5,7 +5,7 @@
   prompts to digest. This will make code simpler. Add different
   profiles to source as examples.
 
-** Details/Refactor/Do Differently [2/7]
+** Details/Refactor/Do Differently [3/7]
 - [ ] Rename git-prompt to something like prompt-gen, since it doesn't
   have to be only for git.
 - [X] Simplify default prompt format. Complications can be done by user,
@@ -30,7 +30,7 @@
 - [ ] Remove bonus programs, they can be in another repo.
 - [X] use '#' if user is root
   Useful, but I don't think I want to run any unnecessary programs as root.
-- [ ] when a repo is in state "staged" and "modified", it looks like this:
+- [X] when a repo is in state "staged" and "modified", it looks like this:
 #+begin_src shell
   [dot.emacs/(null)master] .emacs.d
   $
