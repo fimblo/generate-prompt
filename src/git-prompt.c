@@ -166,15 +166,12 @@ void printNonGitPrompt() {
  */
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
   // figure out what status to use
-  int opt = 0;
-  opt |= status;
+  int opt = status;
 
-  const char * promt_from_env;
   const char * env_prompt;
   if ((status & MODIFIED) && (status & STAGED)) {
     env_prompt = "GP_STAGED_PROMPT";
-    opt = 0;
-    opt |= STAGED;
+    opt = STAGED;
   }
   else if (status & UP_TO_DATE) {
     env_prompt = "GP_UP_TO_DATE_PROMPT";
@@ -186,9 +183,8 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
     env_prompt = "GP_MODIFIED_PROMPT";
   }
 
-
   if (getenv("GP_USE_GIT_PROMPTS_FROM_ENV")) {
-    promt_from_env = getenv(env_prompt);
+    const char * promt_from_env = getenv(env_prompt);
     printf("%s",substitute(substitute(promt_from_env, "repo_name", repo_name), "branch_name", branch_name));
   }
   else {
