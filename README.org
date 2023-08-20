@@ -1,11 +1,11 @@
-* git-prompt
-Simple and fast git prompt
+* generate-prompt
+Simple and fast prompt which supports git repos
 ** I wrote this because
 - I'm a bash user, and
 - bash functions to update the prompt when standing in a git repo is
   just too slow
 
-** What does git-prompt do?
+** What does generate-prompt do?
 - It prints a useful prompt, for easy plugging into PS1.
 - It can tell if you're standing in a git repo or if you're outside of
   one. Depending on the situation, it will use one of the two main
@@ -22,7 +22,7 @@ of stuff in there, mostly commented, but the core of it is:
 
 #+begin_src bash
   prompt_cmd() {
-    PS1="$(/path/to/git-prompt)"
+    PS1="$(/path/to/generate-prompt)"
   }
   PROMPT_COMMAND=prompt_cmd
 #+end_src
@@ -69,8 +69,8 @@ are almost certainly much better than these.
 libgit2
 
 ** Install
-- Run =make git-prompt= to build only git-prompt
-- Run =make= to build git-prompt plus bonus binaries
+- Run =make generate-prompt= to build only generate-prompt
+- Run =make= to build generate-prompt plus bonus binaries
 - =sudo make install= installs at /usr/local/bin
 - =make clean= cleans things up.
   

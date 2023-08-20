@@ -5,14 +5,14 @@
   prompts to digest. This will make code simpler. Add different
   profiles to source as examples.
 
-** Details/Refactor/Do Differently [3/7]
-- [ ] Rename git-prompt to something like prompt-gen, since it doesn't
+** Details/Refactor/Do Differently [4/7]
+- [X] Rename git-prompt to something like prompt-gen, since it doesn't
   have to be only for git.
 - [X] Simplify default prompt format. Complications can be done by user,
   and code will be cleaner
 - [ ] Re-write printPrompt substitutions
-  - Use \p as a indicator to signal intent to git-prompt. The \p will
-    always be followed by one more character denoting the type of
+  - Use \p as a indicator to signal intent to generate-prompt. The \p
+    will always be followed by one more character denoting the type of
     intent.
 
     Nice thing with the \p notation is that it will fit nicely with

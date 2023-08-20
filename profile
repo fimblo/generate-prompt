@@ -4,8 +4,8 @@
 #  $ source profile
 
 prompt_cmd() {
-  # This assumes that the binary git-prompt has been copied into PATH
-  PS1="$(git-prompt)"
+  # This assumes that the binary generate-prompt has been copied into PATH
+  PS1="$(generate-prompt)"
 }
 PROMPT_COMMAND=prompt_cmd
 

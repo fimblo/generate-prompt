@@ -44,10 +44,10 @@ install:
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
 
-# Build only src/git-prompt.c
-git-prompt: $(BUILD_DIR)/git-prompt.o
+# Build only src/generate-prompt.c
+generate-prompt: $(BUILD_DIR)/generate-prompt.o
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $< -o $(BIN_DIR)/git-prompt $(LDFLAGS)
+	$(CC) $(CFLAGS) $< -o $(BIN_DIR)/generate-prompt $(LDFLAGS)
 
 # No arguments, default to build
 default: build
