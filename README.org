@@ -57,14 +57,6 @@ export GP_MODIFIED_PROMPT="MODIFIED: repo: repo_name, branch: branch_name $ ";
 export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
 #+end_src
 
-
-** Bonus
-While floundering around with this over-verbose and low-level
-language, I wrote some other binaries which could be of use at some
-point. Maybe. Actually, others have already written these, and they
-are almost certainly much better than these.
-- git-name : outputs the repo name
-- git-root : outputs the path to the repo root
 ** Dependencies
 libgit2
 

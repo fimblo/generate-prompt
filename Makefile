@@ -44,10 +44,6 @@ install:
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
 
-# Build only src/generate-prompt.c
-generate-prompt: $(BUILD_DIR)/generate-prompt.o
-	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $< -o $(BIN_DIR)/generate-prompt $(LDFLAGS)
 
 # No arguments, default to build
 default: build
