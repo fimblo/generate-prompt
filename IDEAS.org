@@ -1,8 +1,10 @@
 * Ideas etc
+
 ** General directions to consider
 - Perhaps skip default prompts altogether. Depend entirely on envvar
   prompts to digest. This will make code simpler. Add different
   profiles to source as examples.
+
 ** Details/Refactor/Do Differently [/]
 - [ ] Rename git-prompt to something like prompt-gen, since it doesn't
   have to be only for git.
@@ -26,3 +28,4 @@
     detected,that and following 2 chars are studied. If one of the
     above, add correct string (repo name or branch) to target string.
 - [ ] Remove bonus programs, they can be in another repo.
+- [ ] use '#' if user is root
