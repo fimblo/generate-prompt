@@ -181,7 +181,7 @@ void printPrompt(const char *repo_name, const char *branch_name, const int statu
   }
   else {
     char prompt[512];
-    const char *format = "\[%s/%s%s%s\] %s\\W%s\n╰$ ";
+    const char *format = "\[%s/%s%s%s\] %s\\W%s\n$ ";
 
     snprintf(prompt, sizeof(prompt),
              format,
