@@ -27,10 +27,10 @@ of stuff in there, mostly commented, but the core of it is:
   PROMPT_COMMAND=prompt_cmd
 #+end_src
 
-** Usage (advanced)
-If you want to override the default prompt, which will be shown when
-outside of a git repo, export this variable. You can change this as
-you see fit, as if it was your normal PS1 variable.
+** Usage (More fun)
+If you want to override the default prompts, here's what you can do.
+
+=GP_DEFAULT_PROMPT= is the prompt you see when not in a git repo.
 
 #+begin_src bash
 export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
@@ -48,8 +48,11 @@ export GP_USE_GIT_PROMPTS_FROM_ENV="true"
 #+end_src
 
 
-These three can be modified to your heart's extent, assuming the above
-envvar has been set.
+These three can be modified to your heart's content, assuming the
+above envvar has been set. There are two special strings which
+=generate_prompt= looks for: =repo_name= and =branch_name=. These will
+be replaced with the repo's name and the selected branch,
+respectively.
 
 #+begin_src bash
 export GP_UP_TO_DATE_PROMPT="UPTODATE: repo: repo_name, branch: branch_name $ ";
@@ -61,8 +64,8 @@ export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
 libgit2
 
 ** Install
-- Run =make generate-prompt= to build only generate-prompt
-- Run =make= to build generate-prompt plus bonus binaries
+- =brew install libgit2=
+- Run =make= to build generate-prompt
 - =sudo make install= installs at /usr/local/bin
 - =make clean= cleans things up.
   
