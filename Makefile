@@ -16,6 +16,7 @@ endif
 SRC_DIR = src
 BUILD_DIR = build
 BIN_DIR = bin
+LOCAL_INSTALL_DIR = ~/bin
 
 # Source files
 SRCS = $(wildcard $(SRC_DIR)/*.c)
@@ -23,7 +24,7 @@ OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 BINS = $(patsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%, $(SRCS))
 
 # Targets
-.PHONY: all build install clean
+.PHONY: all build install install-local clean
 
 all: build
 
@@ -40,6 +41,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 install:
 	@echo "Installing $(BIN) to /usr/local/bin"
 	@install -m 755 $(BIN) /usr/local/bin/
+
+install-local: $(BINS)
+	@mkdir -p $(LOCAL_INSTALL_DIR)
+	@rm -f $(LOCAL_INSTALL_DIR)/generate-prompt
+	@ln -s $(abspath $(BIN_DIR)/generate-prompt) $(LOCAL_INSTALL_DIR)/generate-prompt
+	@echo "Symbolic link created: $(LOCAL_INSTALL_DIR)/generate-prompt -> $(abspath $(BIN_DIR)/generate-prompt)"
+
 
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
