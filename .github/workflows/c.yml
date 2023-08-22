@@ -1,4 +1,4 @@
-name: CI for C
+name: build
 
 on:
   push:

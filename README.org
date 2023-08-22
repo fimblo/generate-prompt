@@ -1,4 +1,6 @@
 * generate-prompt
+[[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
+
 Simple and fast prompt which supports git repos
 ** I wrote this because
 - I'm a bash user, and
@@ -64,6 +66,7 @@ export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
 libgit2
 
 ** Install
+
 - Install dependency:
   - With homebrew: =brew install libgit2=
   - With apt: =sudo apt install libgit2-dev=
