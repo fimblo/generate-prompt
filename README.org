@@ -64,11 +64,10 @@ export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
 libgit2
 
 ** Install
-- =brew install libgit2=
-- Run =make= to build generate-prompt
-  The Makefile supports building on debian-based os and systems with
-  homebrew installed.
+- Install dependency:
+  - With homebrew: =brew install libgit2=
+  - With apt: =sudo apt install libgit2-dev=
+- Run =make= to build generate-prompt. (tested on mac and ubuntu)
 - =make local-install= installs at ~/bin
 - =sudo make install= installs at /usr/local/bin
 - =make clean= cleans things up.
-  
