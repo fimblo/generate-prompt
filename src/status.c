@@ -16,6 +16,7 @@
  */
 const char* findGitRepositoryPath(const char *path);
 static void print_long(git_status_list *status);
+int compare_branch_refs(git_repository * repo, const char * local_branch_name);
 
 
 /* --------------------------------------------------
@@ -57,9 +58,7 @@ int main() {
   opts.flags =
     GIT_STATUS_OPT_INCLUDE_UNTRACKED |
     GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX |
-    GIT_STATUS_OPT_SORT_CASE_SENSITIVELY |
-    GIT_STATUS_OPT_RECURSE_UNTRACKED_DIRS |
-    GIT_STATUS_OPT_INCLUDE_IGNORED;
+    GIT_STATUS_OPT_SORT_CASE_SENSITIVELY;
 
   git_status_list *status_list = NULL;
   if (git_status_list_new(&status_list, repo, &opts) != 0) {
@@ -69,6 +68,11 @@ int main() {
     return 1;
   }
 
+  if (compare_branch_refs(repo, branch_name) == 0) {
+    printf("The same\n");
+  } else {
+    printf("Different\n");
+  }
   print_long(status_list);
 
 
@@ -212,4 +216,38 @@ const char* findGitRepositoryPath(const char *path) {
   else {
     return strdup("");
   }
+}
+
+
+int compare_branch_refs(git_repository * repo, const char * local_branch_name) {
+
+    // Get the current branch name
+    git_reference *head_ref = NULL;
+    git_repository_head(&head_ref, repo);
+
+    // Get the remote tracking branch name (e.g., origin/main)
+    const char *remote_tracking_branch_name = NULL;
+    git_reference *upstream_ref = NULL;
+    git_reference_lookup(&upstream_ref, repo, "HEAD");
+    const git_oid *upstream_target = git_reference_target(upstream_ref);
+    remote_tracking_branch_name = git_oid_tostr_s(upstream_target) + strlen("refs/remotes/");
+
+    git_reference *local_branch_ref = NULL;
+    git_reference_lookup(&local_branch_ref, repo, local_branch_name);
+    printf("Local branch name: %s\n", local_branch_name);
+
+    git_reference *remote_branch_ref = NULL;
+    git_reference_lookup(&remote_branch_ref, repo, remote_tracking_branch_name);
+    printf("Remote branch name: %s\n", remote_tracking_branch_name);
+
+    int cmp_result = git_reference_cmp(local_branch_ref, remote_branch_ref);
+
+
+    git_reference_free(head_ref);
+    git_reference_free(upstream_ref);
+    git_reference_free(local_branch_ref);
+    git_reference_free(remote_branch_ref);
+
+
+    return cmp_result;
 }
