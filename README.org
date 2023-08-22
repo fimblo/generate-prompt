@@ -1,7 +1,8 @@
 * generate-prompt
 [[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
 
-Simple and fast prompt which supports git repos
+Simple and fast prompt for bash which shows git repo status
+
 ** I wrote this because
 - I'm a bash user, and
 - bash functions to update the prompt when standing in a git repo is
@@ -63,7 +64,7 @@ export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
 #+end_src
 
 ** Dependencies
-libgit2
+- [[https://github.com/libgit2/libgit2][libgit2]]
 
 ** Install
 
