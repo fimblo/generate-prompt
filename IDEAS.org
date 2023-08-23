@@ -5,11 +5,7 @@
   prompts to digest. This will make code simpler. Add different
   profiles to source as examples.
 
-** Details/Refactor/Do Differently [5/7]
-- [ ] Found another bug: when file is marked for deletion, the prompt
-  gets confused. I'm guessing there are other edge cases. The solution
-  is almost certainly in the same place as when I had a file marked as
-  modified _and_ staged.
+** Details/Refactor/Do Differently [6/8]
 - [ ] Re-write printPrompt
   - Take correct prompt string from env, then step through it. Normal
     characters are copied directly into the target string. If a '\' is
@@ -27,6 +23,10 @@
   - \pn - Replace with git repository name
   - \pb - Replace with git branch (short) name
   - Other \pX ideas could be - # of commits ahead or behind, etc    
+- [X] Found another bug: when file is marked for deletion, the prompt
+  gets confused. I'm guessing there are other edge cases. The solution
+  is almost certainly in the same place as when I had a file marked as
+  modified _and_ staged.
 - [X] Rename git-prompt to something like prompt-gen, since it doesn't
   have to be only for git.
 - [X] Simplify default prompt format. Complications can be done by user,

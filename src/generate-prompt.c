@@ -71,6 +71,7 @@ int main() {
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
+  opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
 
   git_status_list *status_list = NULL;
   if (git_status_list_new(&status_list, repo, &opts) != 0) {
@@ -88,15 +89,19 @@ int main() {
   else {
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
-      if (entry->status == GIT_STATUS_INDEX_NEW || entry->status == GIT_STATUS_INDEX_MODIFIED) {
-        status |= STAGED;
-      }
-      if (entry->status == (GIT_STATUS_WT_MODIFIED | GIT_STATUS_INDEX_MODIFIED)) {
-        status |= STAGED | MODIFIED; // File is both staged and modified
-      }
-      if (entry->status == GIT_STATUS_WT_MODIFIED) {
-        status |= MODIFIED;
-      }
+      if (entry->status == (GIT_STATUS_WT_MODIFIED |
+                            GIT_STATUS_INDEX_MODIFIED)) status |= STAGED | MODIFIED; // File is both staged and modified
+
+      if (entry->status == GIT_STATUS_INDEX_NEW)        status |= STAGED;
+      if (entry->status == GIT_STATUS_INDEX_MODIFIED)   status |= STAGED;
+      if (entry->status == GIT_STATUS_INDEX_RENAMED)    status |= STAGED;
+      if (entry->status == GIT_STATUS_INDEX_DELETED)    status |= STAGED;
+      if (entry->status == GIT_STATUS_INDEX_TYPECHANGE) status |= STAGED;
+
+      if (entry->status == GIT_STATUS_WT_RENAMED)       status |= MODIFIED;
+      if (entry->status == GIT_STATUS_WT_DELETED)       status |= MODIFIED;
+      if (entry->status == GIT_STATUS_WT_MODIFIED)      status |= MODIFIED;
+      if (entry->status == GIT_STATUS_WT_TYPECHANGE)    status |= MODIFIED;
     }
   }
   printPrompt(repo_name, branch_name, status);
