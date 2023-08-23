@@ -17,13 +17,7 @@ enum states {
   RESET      = 1<<4,
 };
 
-const char *color[1<<5] = {
-  [ UP_TO_DATE ] =  "\033[0;32m",  // UP_TO_DATE - cyan
-  [ MODIFIED   ] =  "\033[01;33m", // MODIFIED   - bold yellow
-  [ STAGED     ] =  "\033[01;31m", // STAGED     - bold red
-  [ CWD        ] =  "\033[1;34m",  // CWD        - blue
-  [ RESET      ] =  "\033[0m"      // RESET      - RESET to default
-};
+const char *color[1<<5];
 
 
 /* --------------------------------------------------
@@ -33,6 +27,7 @@ const char* findGitRepositoryPath(const char *path);
 const char* substitute (const char * text, const char * search, const char * replacement);
 void printNonGitPrompt();
 void printPrompt(const char *repo_name, const char *branch_name, const int status);
+void setup_colours();
 
 
 /* --------------------------------------------------
@@ -156,6 +151,7 @@ const char* findGitRepositoryPath(const char *path) {
  * use this prompt.
  */
 void printNonGitPrompt() {
+  setup_colours();
   const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT");
   if (defaultPrompt) {
     printf("%s", defaultPrompt);
@@ -170,6 +166,8 @@ void printNonGitPrompt() {
  * When standing in a git-repo, use this prompt
  */
 void printPrompt(const char *repo_name, const char *branch_name, const int status) {
+  setup_colours();
+
   // figure out what status to use
   int opt = status;
 
@@ -234,3 +232,13 @@ const char * substitute (const char * text, const char * search, const char * re
   return message;
 
 }
+
+
+void setup_colours() {
+  color[ UP_TO_DATE ] =  getenv("GP_UP_TO_DATE") ? getenv("GP_UP_TO_DATE") : "\033[0;32m";  // UP_TO_DATE - default cyan
+  color[ MODIFIED   ] =  getenv("GP_MODIFIED")   ? getenv("GP_MODIFIED")   : "\033[01;33m"; // MODIFIED   - default bold yellow
+  color[ STAGED     ] =  getenv("GP_STAGED")     ? getenv("GP_STAGED")     : "\033[01;31m"; // STAGED     - default bold red
+  color[ CWD        ] =  getenv("GP_CWD")        ? getenv("GP_CWD")        : "\033[1;34m";  // CWD        - default blue
+  color[ RESET      ] =  "\033[0m";      // RESET      - RESET to default
+}
+
