@@ -31,3 +31,21 @@ PROMPT_COMMAND=prompt_cmd
 # export GP_MODIFIED_PROMPT="MODIFIED: repo: repo_name, branch: branch_name $ ";
 # export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
 
+
+
+unset GP_DEFAULT_PROMPT
+unset GP_UP_TO_DATE
+unset GP_MODIFIED
+unset GP_STAGED
+unset GP_CWD
+
+
+export     GP_GIT_PROMPT="[\pR][\pB][\pC]\n$ ";
+export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
+
+
+# export     GP_UP_TO_DATE="\033[0;32m"
+# export       GP_MODIFIED="\033[01;33m"
+# export         GP_STAGED="\033[01;31m"
+# export            GP_CWD="\033[1;34m"
+

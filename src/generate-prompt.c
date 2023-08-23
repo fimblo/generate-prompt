@@ -24,11 +24,11 @@ const char *color[1<<5];
  * Declarations
  */
 const char* findGitRepositoryPath(const char *path);
-const char* substitute (const char * text, const char * search, const char * replacement);
+char* substitute (const char * text, const char * search, const char * replacement);
 void printNonGitPrompt();
-void printPrompt(const char *repo_name, const char *branch_name, const int status);
-void setup_colours();
-
+void printGitPrompt(const char *repo_name, const char *branch_name, const int istatus, const int wstatus);
+void setup_colors();
+char* replace(const char* input, const char* repo_name, const char* branch_name, const int istatus, const int wstatus);
 
 /* --------------------------------------------------
  * Functions
@@ -77,29 +77,26 @@ int main() {
   }
 
   int status_count = git_status_list_entrycount(status_list);
-  int status = 0;
-  if (status_count == 0) {
-    status |= UP_TO_DATE;
-  }
-  else {
+  int istatus = UP_TO_DATE;
+  int wstatus = UP_TO_DATE;
+  if (status_count != 0) {
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
-      if (entry->status == (GIT_STATUS_WT_MODIFIED |
-                            GIT_STATUS_INDEX_MODIFIED)) status |= STAGED | MODIFIED; // File is both staged and modified
+      if (entry->status == GIT_STATUS_CURRENT)         continue;
 
-      if (entry->status == GIT_STATUS_INDEX_NEW)        status |= STAGED;
-      if (entry->status == GIT_STATUS_INDEX_MODIFIED)   status |= STAGED;
-      if (entry->status == GIT_STATUS_INDEX_RENAMED)    status |= STAGED;
-      if (entry->status == GIT_STATUS_INDEX_DELETED)    status |= STAGED;
-      if (entry->status == GIT_STATUS_INDEX_TYPECHANGE) status |= STAGED;
+      if (entry->status & GIT_STATUS_INDEX_NEW)        istatus = STAGED;
+      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   istatus = STAGED;
+      if (entry->status & GIT_STATUS_INDEX_RENAMED)    istatus = STAGED;
+      if (entry->status & GIT_STATUS_INDEX_DELETED)    istatus = STAGED;
+      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) istatus = STAGED;
 
-      if (entry->status == GIT_STATUS_WT_RENAMED)       status |= MODIFIED;
-      if (entry->status == GIT_STATUS_WT_DELETED)       status |= MODIFIED;
-      if (entry->status == GIT_STATUS_WT_MODIFIED)      status |= MODIFIED;
-      if (entry->status == GIT_STATUS_WT_TYPECHANGE)    status |= MODIFIED;
+      if (entry->status & GIT_STATUS_WT_RENAMED)       wstatus = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_DELETED)       wstatus = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_MODIFIED)      wstatus = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_TYPECHANGE)    wstatus = MODIFIED;
     }
   }
-  printPrompt(repo_name, branch_name, status);
+  printGitPrompt(repo_name, branch_name, istatus, wstatus);
 
   git_status_list_free(status_list);
   git_reference_free(head_ref);
@@ -151,7 +148,8 @@ const char* findGitRepositoryPath(const char *path) {
  * use this prompt.
  */
 void printNonGitPrompt() {
-  setup_colours();
+  setup_colors();
+
   const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT");
   if (defaultPrompt) {
     printf("%s", defaultPrompt);
@@ -162,83 +160,90 @@ void printNonGitPrompt() {
 }
 
 
-/* --------------------------------------------------
- * When standing in a git-repo, use this prompt
- */
-void printPrompt(const char *repo_name, const char *branch_name, const int status) {
-  setup_colours();
+void printGitPrompt(const char *repo_name, const char *branch_name, const int istatus, const int wstatus) {
+  setup_colors();
 
-  // figure out what status to use
-  int opt = status;
+  const char* input = getenv("GP_GIT_PROMPT");
+  char* output = replace(input, repo_name, branch_name, istatus, wstatus);
 
-  const char * env_prompt;
-  if ((status & MODIFIED) && (status & STAGED)) {
-    env_prompt = "GP_STAGED_PROMPT";
-    opt = STAGED;
-  }
-  else if (status & UP_TO_DATE) {
-    env_prompt = "GP_UP_TO_DATE_PROMPT";
-  }
-  else if (status & STAGED) {
-    env_prompt = "GP_STAGED_PROMPT";
-  }
-  else {
-    env_prompt = "GP_MODIFIED_PROMPT";
-  }
-
-  if (getenv("GP_USE_GIT_PROMPTS_FROM_ENV")) {
-    const char * promt_from_env = getenv(env_prompt);
-    printf("%s",substitute(substitute(promt_from_env, "repo_name", repo_name), "branch_name", branch_name));
-  }
-  else {
-    char prompt[512];
-    const char *format = "\[%s/%s%s%s\] %s\\W%s\n$ ";
-
-    snprintf(prompt, sizeof(prompt),
-             format,
-             repo_name,
-             color[opt],
-             branch_name,
-             color[RESET],
-             color[CWD],
-             color[RESET]);
-
-    printf("%s", prompt);
-  }
+  printf("%s", output);
+  free(output);
 }
+
+
+/*
+ * Helper function to set all colors
+ */
+void setup_colors() {
+  color[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default cyan
+  color[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[01;33m"; // MODIFIED   - default bold yellow
+  color[ STAGED     ] = getenv("GP_STAGED")     ?: "\033[01;31m"; // STAGED     - default bold red
+  color[ CWD        ] = getenv("GP_CWD")        ?: "\033[1;34m";  // CWD        - default blue
+  color[ RESET      ] = "\033[0m"; // RESET      - RESET to default
+}
+
+/*
+  Function will look for the strings \pR, \pB, and \pC
+  Each, if found in `input`, will be replaced like so:
+
+  \pR: Replaced with repo_name
+  \pB: Replaced with "%s%s%s", color[istatus], branch_name, color[reset]
+  \pC: Replaced with "%s \w %s", color[istatus], color[reset]
+
+  Expect input like this:  "[\pR] [\pB] [\pC]"
+*/
+char* replace(const char* input, const char* repo_name, const char* branch_name, const int istatus, const int wstatus) {
+  char branch_temp[256];
+  char cwd_temp[256];
+  sprintf(branch_temp, "%s%s%s", color[istatus], branch_name, color[RESET]);
+  sprintf(cwd_temp, "%s\\W%s", color[wstatus], color[RESET]);
+
+  const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
+  const char* replaceStrings[] = { repo_name, branch_temp, cwd_temp };
+
+  char* output = strdup(input);
+
+  for (int i = 0; i < sizeof(searchStrings) / sizeof(searchStrings[0]); i++) {
+    const char* searchString = searchStrings[i];
+    const char* replaceString = replaceStrings[i];
+    output = substitute(output, searchString, replaceString);
+  }
+
+  return output;
+}
+
+
 
 
 /* --------------------------------------------------
  * Helper: substitute
  */
-const char * substitute (const char * text, const char * search, const char * replacement) {
-  char *message = strdup(text);
-  char *found = strstr(message, search);
+char* substitute(const char* text, const char* search, const char* replacement) {
+  char* message = strdup(text);
+  char* found = strstr(message, search);
 
-  if (found) {
+  while (found) {
     size_t prefix_length = found - message;
     size_t suffix_length = strlen(found + strlen(search));
 
     size_t new_length = prefix_length + strlen(replacement) + suffix_length + 1;
-    char temp[new_length];  // Use a temporary array
+    char* temp = malloc(new_length);  // Allocate temporary buffer for the new string
 
     strncpy(temp, message, prefix_length);
-    strcpy(temp + prefix_length, replacement);
-    strcpy(temp + prefix_length + strlen(replacement), found + strlen(search));
+    temp[prefix_length] = '\0';
 
-    strcpy(message, temp);  // Copy the modified string back to 'message'
+    strcat(temp, replacement);
+
+    // If there's still a suffix, copy it to the new string
+    if (suffix_length > 0) {
+      strcat(temp, found + strlen(search));
+    }
+
+    free(message);  // Free the old 'message'
+    message = temp;  // Set 'message' to the new string
+
+    found = strstr(message, search);  // Search for the next occurrence
   }
 
   return message;
-
 }
-
-
-void setup_colours() {
-  color[ UP_TO_DATE ] =  getenv("GP_UP_TO_DATE") ? getenv("GP_UP_TO_DATE") : "\033[0;32m";  // UP_TO_DATE - default cyan
-  color[ MODIFIED   ] =  getenv("GP_MODIFIED")   ? getenv("GP_MODIFIED")   : "\033[01;33m"; // MODIFIED   - default bold yellow
-  color[ STAGED     ] =  getenv("GP_STAGED")     ? getenv("GP_STAGED")     : "\033[01;31m"; // STAGED     - default bold red
-  color[ CWD        ] =  getenv("GP_CWD")        ? getenv("GP_CWD")        : "\033[1;34m";  // CWD        - default blue
-  color[ RESET      ] =  "\033[0m";      // RESET      - RESET to default
-}
-
