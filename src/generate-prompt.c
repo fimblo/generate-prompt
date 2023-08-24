@@ -67,7 +67,7 @@ int main() {
 
 
   // check if local and remote are the same
-  const git_oid *local_branch_commit_id = git_reference_target(head_ref);
+  const git_oid *local_commit_id = git_reference_target(head_ref);
 
   char full_remote_branch_name[128];
   sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
@@ -83,7 +83,7 @@ int main() {
   const git_oid *remote_commit_id = git_reference_target(upstream_ref);
 
   int rstatus = UP_TO_DATE;
-  if (git_oid_cmp(local_branch_commit_id, remote_commit_id) != 0)
+  if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
     rstatus = MODIFIED; 
 
 
