@@ -12,9 +12,8 @@
 enum states {
   UP_TO_DATE = 1<<0,
   MODIFIED   = 1<<1,
-  STAGED     = 1<<2,
-  CWD        = 1<<3,
-  RESET      = 1<<4,
+  CWD        = 1<<2,
+  RESET      = 1<<3,
 };
 
 const char *color[1<<5];
@@ -110,11 +109,11 @@ int main() {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_CURRENT)         continue;
 
-      if (entry->status & GIT_STATUS_INDEX_NEW)        istatus = STAGED;
-      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   istatus = STAGED;
-      if (entry->status & GIT_STATUS_INDEX_RENAMED)    istatus = STAGED;
-      if (entry->status & GIT_STATUS_INDEX_DELETED)    istatus = STAGED;
-      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) istatus = STAGED;
+      if (entry->status & GIT_STATUS_INDEX_NEW)        istatus = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   istatus = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_RENAMED)    istatus = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_DELETED)    istatus = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) istatus = MODIFIED;
 
       if (entry->status & GIT_STATUS_WT_RENAMED)       wstatus = MODIFIED;
       if (entry->status & GIT_STATUS_WT_DELETED)       wstatus = MODIFIED;
@@ -202,9 +201,8 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
  * Helper function to set all colors
  */
 void setup_colors() {
-  color[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default cyan
+  color[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   color[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[01;33m"; // MODIFIED   - default bold yellow
-  color[ STAGED     ] = getenv("GP_STAGED")     ?: "\033[01;31m"; // STAGED     - default bold red
   color[ CWD        ] = getenv("GP_CWD")        ?: "\033[1;34m";  // CWD        - default blue
   color[ RESET      ] = "\033[0m"; // RESET      - RESET to default
 }
