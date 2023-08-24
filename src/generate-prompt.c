@@ -21,12 +21,14 @@ const char *color[3];
 /* --------------------------------------------------
  * Declarations
  */
-const char* findGitRepositoryPath(const char *path);
-char* substitute (const char * text, const char * search, const char * replacement);
 void printNonGitPrompt();
 void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus);
+
+// helpers
+const char* findGitRepositoryPath(const char *path);
 void setup_colors();
 char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus);
+char* substitute (const char * text, const char * search, const char * replacement);
 
 /* --------------------------------------------------
  * Functions
@@ -81,7 +83,7 @@ int main() {
 
   int rstatus = UP_TO_DATE;
   if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
-    rstatus = MODIFIED; 
+    rstatus = MODIFIED;
 
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
