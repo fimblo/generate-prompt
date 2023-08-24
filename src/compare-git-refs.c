@@ -13,8 +13,6 @@ int main() {
         return 1;
     }
 
-    // Local branch stuff //////////////////////////////////////////////////
-
     git_reference *head_ref = NULL;
     error = git_repository_head(&head_ref, repo);
     if (error != 0) {
@@ -24,6 +22,8 @@ int main() {
         return 1;
     }
 
+
+    // Local branch stuff //////////////////////////////////////////////////
 
     char full_local_branch_name[128];
     sprintf(full_local_branch_name, "refs/heads/%s",  git_reference_shorthand(head_ref));
