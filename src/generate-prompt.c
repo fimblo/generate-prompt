@@ -208,7 +208,7 @@ void printGitPrompt(const struct GitStatus *status) {
 }
 
 
-/*
+/* -------------------------------------------------- 
   Function will look for the strings \pR, \pB, and \pC
   Each, if found in `input`, will be replaced like so:
 
