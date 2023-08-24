@@ -26,9 +26,9 @@ const char *color[1<<5];
 const char* findGitRepositoryPath(const char *path);
 char* substitute (const char * text, const char * search, const char * replacement);
 void printNonGitPrompt();
-void printGitPrompt(const char *repo_name, const char *branch_name, const int istatus, const int wstatus);
+void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus);
 void setup_colors();
-char* replace(const char* input, const char* repo_name, const char* branch_name, const int istatus, const int wstatus);
+char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus);
 
 /* --------------------------------------------------
  * Functions
@@ -58,9 +58,32 @@ int main() {
     return 1;
   }
 
-  // get repo name and branch name
+  // get repo name and branch names
   const char *repo_name = strrchr(git_repository_path, '/') + 1; // "projectName"
   const char *branch_name = git_reference_shorthand(head_ref);
+  char full_local_branch_name[128];
+  sprintf(full_local_branch_name, "refs/heads/%s",  branch_name);
+
+
+  // check if local and remote are the same
+  const git_oid *local_branch_commit_id = git_reference_target(head_ref);
+
+  char full_remote_branch_name[128];
+  sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
+
+  git_reference *upstream_ref = NULL;
+  if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
+    printNonGitPrompt();
+    git_reference_free(head_ref);
+    git_repository_free(repo);
+    git_libgit2_shutdown();
+    return 1;
+  }
+  const git_oid *remote_commit_id = git_reference_target(upstream_ref);
+
+  int rstatus = UP_TO_DATE;
+  if (git_oid_cmp(local_branch_commit_id, remote_commit_id) != 0)
+    rstatus = MODIFIED; 
 
 
   // set up git status
@@ -70,6 +93,7 @@ int main() {
 
   git_status_list *status_list = NULL;
   if (git_status_list_new(&status_list, repo, &opts) != 0) {
+    git_reference_free(upstream_ref);
     git_reference_free(head_ref);
     git_repository_free(repo);
     printNonGitPrompt();
@@ -96,9 +120,10 @@ int main() {
       if (entry->status & GIT_STATUS_WT_TYPECHANGE)    wstatus = MODIFIED;
     }
   }
-  printGitPrompt(repo_name, branch_name, istatus, wstatus);
+  printGitPrompt(repo_name, branch_name, rstatus, istatus, wstatus);
 
   git_status_list_free(status_list);
+  git_reference_free(upstream_ref);
   git_reference_free(head_ref);
   git_repository_free(repo);
   git_libgit2_shutdown();
@@ -160,11 +185,11 @@ void printNonGitPrompt() {
 }
 
 
-void printGitPrompt(const char *repo_name, const char *branch_name, const int istatus, const int wstatus) {
+void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus) {
   setup_colors();
 
   const char* input = getenv("GP_GIT_PROMPT");
-  char* output = replace(input, repo_name, branch_name, istatus, wstatus);
+  char* output = replace(input, repo_name, branch_name, rstatus, istatus, wstatus);
 
   printf("%s", output);
   free(output);
@@ -192,14 +217,16 @@ void setup_colors() {
 
   Expect input like this:  "[\pR] [\pB] [\pC]"
 */
-char* replace(const char* input, const char* repo_name, const char* branch_name, const int istatus, const int wstatus) {
+char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus) {
+  char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[256];
+  sprintf(repo_temp, "%s%s%s", color[rstatus], repo_name, color[RESET]);
   sprintf(branch_temp, "%s%s%s", color[istatus], branch_name, color[RESET]);
   sprintf(cwd_temp, "%s\\W%s", color[wstatus], color[RESET]);
 
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
-  const char* replaceStrings[] = { repo_name, branch_temp, cwd_temp };
+  const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
 
   char* output = strdup(input);
 
