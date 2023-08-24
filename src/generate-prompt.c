@@ -7,7 +7,7 @@
 
 
 /* --------------------------------------------------
- * Enums and colours
+ * Common global stuff
  */
 enum states {
   UP_TO_DATE = 0,
@@ -15,17 +15,24 @@ enum states {
   RESET      = 2,
 };
 
+struct GitStatus {
+  const char *repo_name;
+  const char *branch_name;
+  int repo;
+  int index;
+  int wdir;
+};
 
 
 /* --------------------------------------------------
  * Declarations
  */
 void printNonGitPrompt();
-void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus);
+void printGitPrompt(const struct GitStatus *status);
 
 // helpers
 const char* findGitRepositoryPath(const char *path);
-char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus);
+char* replace(const char* input, const struct GitStatus *status);
 char* substitute (const char * text, const char * search, const char * replacement);
 
 /* --------------------------------------------------
@@ -79,9 +86,16 @@ int main() {
   }
   const git_oid *remote_commit_id = git_reference_target(upstream_ref);
 
-  int rstatus = UP_TO_DATE;
+
+  struct GitStatus status;
+  status.repo_name   = repo_name;
+  status.branch_name = branch_name;
+  status.repo        = UP_TO_DATE;
+  status.index       = UP_TO_DATE;
+  status.wdir        = UP_TO_DATE;
+
   if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
-    rstatus = MODIFIED;
+    status.repo = MODIFIED;
 
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
@@ -100,28 +114,26 @@ int main() {
 
   // check index and wt for diffs
   int status_count = git_status_list_entrycount(status_list);
-  int istatus = UP_TO_DATE;
-  int wstatus = UP_TO_DATE;
   if (status_count != 0) {
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_CURRENT)         continue;
 
-      if (entry->status & GIT_STATUS_INDEX_NEW)        istatus = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   istatus = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_RENAMED)    istatus = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_DELETED)    istatus = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) istatus = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_NEW)        status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_RENAMED)    status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_DELETED)    status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) status.index = MODIFIED;
 
-      if (entry->status & GIT_STATUS_WT_RENAMED)       wstatus = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_DELETED)       wstatus = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_MODIFIED)      wstatus = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_TYPECHANGE)    wstatus = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_RENAMED)       status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_DELETED)       status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_MODIFIED)      status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_TYPECHANGE)    status.wdir = MODIFIED;
     }
   }
 
   // print the git prompt now that we have the info
-  printGitPrompt(repo_name, branch_name, rstatus, istatus, wstatus);
+  printGitPrompt(&status);
 
   // clean up before we end
   git_status_list_free(status_list);
@@ -184,10 +196,12 @@ void printNonGitPrompt() {
   printf( "\\W $ ");
 }
 
-
-void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus) {
+/* -------------------------------------------------- 
+ *  When standing in a git repo, use this prompt.
+ */
+void printGitPrompt(const struct GitStatus *status) {
   const char* input = getenv("GP_GIT_PROMPT");
-  char* output = replace(input, repo_name, branch_name, rstatus, istatus, wstatus);
+  char* output = replace(input, status);
 
   printf("%s", output);
   free(output);
@@ -204,7 +218,7 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
 
   Expect input like this:  "[\pR] [\pB] [\pC]"
 */
-char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus) {
+char* replace(const char* input, const struct GitStatus *status) {
   const char *colour[3];
   colour[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
@@ -214,9 +228,9 @@ char* replace(const char* input, const char* repo_name, const char* branch_name,
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[256];
-  sprintf(repo_temp, "%s%s%s", colour[rstatus], repo_name, colour[RESET]);
-  sprintf(branch_temp, "%s%s%s", colour[istatus], branch_name, colour[RESET]);
-  sprintf(cwd_temp, "%s\\W%s", colour[wstatus], colour[RESET]);
+  sprintf(repo_temp, "%s%s%s", colour[status->repo], status->repo_name, colour[RESET]);
+  sprintf(branch_temp, "%s%s%s", colour[status->index], status->branch_name, colour[RESET]);
+  sprintf(cwd_temp, "%s\\W%s", colour[status->wdir], colour[RESET]);
 
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
