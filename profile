@@ -39,7 +39,7 @@ unset GP_MODIFIED
 unset GP_CWD
 
 
-export     GP_GIT_PROMPT="[\pR][\pB][\pC]\n$ ";
+export     GP_GIT_PROMPT="[\pR/\pB][\pC]\n$ ";
 export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
 
 
