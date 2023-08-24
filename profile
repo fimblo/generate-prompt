@@ -27,7 +27,7 @@ unset GP_GIT_PROMPT
 #   \pB    replaced with the local branch name, coloured with state
 #   \pC    replaced with the current working directory(cwd), coloured with state
 #
-# The color switches between green and yellow, or GP_UP_TO_DATE and
+# The colour switches between green and yellow, or GP_UP_TO_DATE and
 # GP_MODIFIED (if these are set in the environment).
 #
 # 

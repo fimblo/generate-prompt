@@ -7,7 +7,7 @@
 
 
 /* --------------------------------------------------
- * Enums and colors
+ * Enums and colours
  */
 enum states {
   UP_TO_DATE = 0,
@@ -15,7 +15,7 @@ enum states {
   RESET      = 2,
 };
 
-const char *color[3];
+const char *colour[3];
 
 
 /* --------------------------------------------------
@@ -26,7 +26,7 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
 
 // helpers
 const char* findGitRepositoryPath(const char *path);
-void setup_colors();
+void setup_colours();
 char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus);
 char* substitute (const char * text, const char * search, const char * replacement);
 
@@ -177,7 +177,7 @@ const char* findGitRepositoryPath(const char *path) {
  * use this prompt.
  */
 void printNonGitPrompt() {
-  setup_colors();
+  setup_colours();
 
   const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT");
   if (defaultPrompt) {
@@ -190,7 +190,7 @@ void printNonGitPrompt() {
 
 
 void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus) {
-  setup_colors();
+  setup_colours();
 
   const char* input = getenv("GP_GIT_PROMPT");
   char* output = replace(input, repo_name, branch_name, rstatus, istatus, wstatus);
@@ -201,12 +201,12 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
 
 
 /*
- * Helper function to set all colors
+ * Helper function to set all colours
  */
-void setup_colors() {
-  color[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
-  color[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
-  color[ RESET      ] = "\033[0m"; // RESET      - RESET to default
+void setup_colours() {
+  colour[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
+  colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
+  colour[ RESET      ] = "\033[0m"; // RESET      - RESET to default
 }
 
 /*
@@ -214,8 +214,8 @@ void setup_colors() {
   Each, if found in `input`, will be replaced like so:
 
   \pR: Replaced with repo_name
-  \pB: Replaced with "%s%s%s", color[istatus], branch_name, color[reset]
-  \pC: Replaced with "%s \w %s", color[istatus], color[reset]
+  \pB: Replaced with "%s%s%s", colour[istatus], branch_name, colour[reset]
+  \pC: Replaced with "%s \w %s", colour[istatus], colour[reset]
 
   Expect input like this:  "[\pR] [\pB] [\pC]"
 */
@@ -223,9 +223,9 @@ char* replace(const char* input, const char* repo_name, const char* branch_name,
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[256];
-  sprintf(repo_temp, "%s%s%s", color[rstatus], repo_name, color[RESET]);
-  sprintf(branch_temp, "%s%s%s", color[istatus], branch_name, color[RESET]);
-  sprintf(cwd_temp, "%s\\W%s", color[wstatus], color[RESET]);
+  sprintf(repo_temp, "%s%s%s", colour[rstatus], repo_name, colour[RESET]);
+  sprintf(branch_temp, "%s%s%s", colour[istatus], branch_name, colour[RESET]);
+  sprintf(cwd_temp, "%s\\W%s", colour[wstatus], colour[RESET]);
 
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
