@@ -10,12 +10,12 @@
  * Enums and colors
  */
 enum states {
-  UP_TO_DATE = 1<<0,
-  MODIFIED   = 1<<1,
-  RESET      = 1<<2,
+  UP_TO_DATE = 0,
+  MODIFIED   = 1,
+  RESET      = 2,
 };
 
-const char *color[1<<5];
+const char *color[3];
 
 
 /* --------------------------------------------------
