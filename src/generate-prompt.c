@@ -15,7 +15,6 @@ enum states {
   RESET      = 2,
 };
 
-const char *colour[3];
 
 
 /* --------------------------------------------------
@@ -26,7 +25,6 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
 
 // helpers
 const char* findGitRepositoryPath(const char *path);
-void setup_colours();
 char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus);
 char* substitute (const char * text, const char * search, const char * replacement);
 
@@ -177,8 +175,6 @@ const char* findGitRepositoryPath(const char *path) {
  * use this prompt.
  */
 void printNonGitPrompt() {
-  setup_colours();
-
   const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT");
   if (defaultPrompt) {
     printf("%s", defaultPrompt);
@@ -190,8 +186,6 @@ void printNonGitPrompt() {
 
 
 void printGitPrompt(const char *repo_name, const char *branch_name, const int rstatus, const int istatus, const int wstatus) {
-  setup_colours();
-
   const char* input = getenv("GP_GIT_PROMPT");
   char* output = replace(input, repo_name, branch_name, rstatus, istatus, wstatus);
 
@@ -199,15 +193,6 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
   free(output);
 }
 
-
-/*
- * Helper function to set all colours
- */
-void setup_colours() {
-  colour[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
-  colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
-  colour[ RESET      ] = "\033[0m"; // RESET      - RESET to default
-}
 
 /*
   Function will look for the strings \pR, \pB, and \pC
@@ -220,6 +205,12 @@ void setup_colours() {
   Expect input like this:  "[\pR] [\pB] [\pC]"
 */
 char* replace(const char* input, const char* repo_name, const char* branch_name, const int rstatus, const int istatus, const int wstatus) {
+  const char *colour[3];
+  colour[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
+  colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
+  colour[ RESET      ] = "\033[0m"; // RESET      - RESET to default
+
+
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[256];
