@@ -55,6 +55,8 @@ int main() {
   if (git_repository_head(&head_ref, repo) != 0) {
     printNonGitPrompt();
     git_repository_free(repo);
+    git_libgit2_shutdown();
+    printNonGitPrompt();
     return 1;
   }
 
