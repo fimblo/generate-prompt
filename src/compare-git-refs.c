@@ -24,25 +24,15 @@ int main() {
         return 1;
     }
 
-    char local_branch_name[128];
-    sprintf(local_branch_name, "refs/heads/%s",  git_reference_shorthand(head_ref));
 
+    char full_local_branch_name[128];
+    sprintf(full_local_branch_name, "refs/heads/%s",  git_reference_shorthand(head_ref));
     
-    git_reference *local_branch_ref = NULL;
-    error = git_reference_lookup(&local_branch_ref, repo, local_branch_name);
-    if (error != 0) {
-        printf("Failed to lookup local branch reference.\n");
-        git_reference_free(head_ref);
-        git_repository_free(repo);
-        git_libgit2_shutdown();
-        return 1;
-    }
-
-    const git_oid *local_branch_commit_id = git_reference_target(local_branch_ref);
-
+    const git_oid *local_branch_commit_id = git_reference_target(head_ref);
 
 
     // Upstream branch stuff //////////////////////////////////////////////////
+
     char full_remote_branch_name[128];
     sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
 
@@ -51,7 +41,6 @@ int main() {
     error = git_reference_lookup(&upstream_ref, repo, full_remote_branch_name); 
     if (error != 0) {
         printf("Failed to lookup upstream reference.\n");
-        git_reference_free(local_branch_ref);
         git_reference_free(head_ref);
         git_repository_free(repo);
         git_libgit2_shutdown();
@@ -69,7 +58,6 @@ int main() {
     error = git_reference_lookup(&remote_branch_ref, repo, remote_branch_name);
     if (error != 0) {
         printf("Failed to lookup remote branch reference.\n");
-        git_reference_free(local_branch_ref);
         git_reference_free(upstream_ref);
         git_reference_free(head_ref);
         git_repository_free(repo);
@@ -85,7 +73,7 @@ int main() {
 
     printf("Local commit:  '%s'\tName: '%s'\n",
            git_oid_tostr_s(local_branch_commit_id),
-           local_branch_name);
+           full_local_branch_name);
     printf("Remote commit: '%s'\tName: '%s'\n",
            git_oid_tostr_s(remote_branch_commit_id),
            remote_branch_name);
@@ -98,7 +86,6 @@ int main() {
         printf("Local branch is the same as the remote tracking branch.\n");
     }
 
-    git_reference_free(local_branch_ref);
     git_reference_free(remote_branch_ref);
     git_reference_free(upstream_ref);
     git_reference_free(head_ref);
