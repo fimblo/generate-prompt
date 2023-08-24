@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <git2.h>
-
+#include <unistd.h>
+#include <libgen.h>
 
 /* --------------------------------------------------
  * Common global stuff
@@ -18,6 +19,7 @@ enum states {
 struct GitStatus {
   const char *repo_name;
   const char *branch_name;
+  const char *repo_path;
   int repo;
   int index;
   int wdir;
@@ -90,6 +92,7 @@ int main() {
   struct GitStatus status;
   status.repo_name   = repo_name;
   status.branch_name = branch_name;
+  status.repo_path   = git_repository_path;
   status.repo        = UP_TO_DATE;
   status.index       = UP_TO_DATE;
   status.wdir        = UP_TO_DATE;
@@ -224,13 +227,17 @@ char* replace(const char* input, const struct GitStatus *status) {
   colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
   colour[ RESET      ] = "\033[0m"; // RESET      - RESET to default
 
+  char cwd[2048];
+  getcwd(cwd, sizeof(cwd));
+  size_t common_length = strspn(status->repo_path, cwd);
+  char *rel_path = cwd + common_length;
 
   char repo_temp[256];
   char branch_temp[256];
-  char cwd_temp[256];
+  char cwd_temp[2048];
   sprintf(repo_temp, "%s%s%s", colour[status->repo], status->repo_name, colour[RESET]);
   sprintf(branch_temp, "%s%s%s", colour[status->index], status->branch_name, colour[RESET]);
-  sprintf(cwd_temp, "%s\\W%s", colour[status->wdir], colour[RESET]);
+  sprintf(cwd_temp, "%sroot%s%s", colour[status->wdir], rel_path, colour[RESET]);
 
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };

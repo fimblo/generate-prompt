@@ -39,7 +39,7 @@ unset GP_GIT_PROMPT
 #               yellow  some tracked file(s) have been modified
 #
 # Note: all terminal escape codes, if used, are preserved.
-export     GP_GIT_PROMPT="[\pR/\pB][\pC]\n$ ";
+export     GP_GIT_PROMPT="[\pR/\pB/\pC]\n$ ";
 
 
 unset GP_UP_TO_DATE
