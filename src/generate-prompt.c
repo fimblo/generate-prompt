@@ -63,7 +63,6 @@ int main() {
   char full_local_branch_name[128];
   sprintf(full_local_branch_name, "refs/heads/%s",  branch_name);
 
-
   // check if local and remote are the same
   const git_oid *local_commit_id = git_reference_target(head_ref);
 
@@ -84,7 +83,6 @@ int main() {
   if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
     rstatus = MODIFIED; 
 
-
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
@@ -100,6 +98,7 @@ int main() {
     return 1;
   }
 
+  // check index and wt for diffs
   int status_count = git_status_list_entrycount(status_list);
   int istatus = UP_TO_DATE;
   int wstatus = UP_TO_DATE;
@@ -120,8 +119,11 @@ int main() {
       if (entry->status & GIT_STATUS_WT_TYPECHANGE)    wstatus = MODIFIED;
     }
   }
+
+  // print the git prompt now that we have the info
   printGitPrompt(repo_name, branch_name, rstatus, istatus, wstatus);
 
+  // clean up before we end
   git_status_list_free(status_list);
   git_reference_free(upstream_ref);
   git_reference_free(head_ref);
