@@ -12,8 +12,7 @@
 enum states {
   UP_TO_DATE = 1<<0,
   MODIFIED   = 1<<1,
-  CWD        = 1<<2,
-  RESET      = 1<<3,
+  RESET      = 1<<2,
 };
 
 const char *color[1<<5];
@@ -182,7 +181,7 @@ void printNonGitPrompt() {
     return;
   }
 
-  printf( "%s\\W%s $ ", color[CWD], color[RESET]);
+  printf( "\\W $ ");
 }
 
 
@@ -203,7 +202,6 @@ void printGitPrompt(const char *repo_name, const char *branch_name, const int rs
 void setup_colors() {
   color[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   color[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
-  color[ CWD        ] = getenv("GP_CWD")        ?: "\033[1;34m";  // CWD        - default blue
   color[ RESET      ] = "\033[0m"; // RESET      - RESET to default
 }
 

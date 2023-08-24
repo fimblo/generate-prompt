@@ -36,7 +36,6 @@ PROMPT_COMMAND=prompt_cmd
 unset GP_DEFAULT_PROMPT
 unset GP_UP_TO_DATE
 unset GP_MODIFIED
-unset GP_CWD
 
 
 export     GP_GIT_PROMPT="[\pR/\pB][\pC]\n$ ";
@@ -45,5 +44,4 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 
 # export     GP_UP_TO_DATE="\033[0;32m"
 # export       GP_MODIFIED="\033[01;33m"
-# export            GP_CWD="\033[1;34m"
 
