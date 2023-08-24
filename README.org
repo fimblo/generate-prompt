@@ -17,7 +17,24 @@ Simple and fast prompt for bash which shows git repo status
   - the name of the repo
   - the name of the branch
   - the basename of your current working directory
+- Depending on the state of your repo, it will highlight the above
+  three with one of two colours. See below for more details.
 - It allows you to modify the prompt to your liking (advanced usage).
+
+** Showing state through colours
+When inside of a git repository, the prompt will tell you what state
+the repo is in through the use of colours.
+
+
+| Repo name           | green  | there local and remote branches are the same |
+|                     | yellow | there is a difference.                       |
+|                     |        |                                              |
+| Branch name         | green  | there is nothing to commit                   |
+|                     | yellow | something was added, deleted, renamed, etc   |
+|                     |        |                                              |
+| Current working dir | green  | no tracked files have been modified          |
+|                     | yellow | tracked file(s) have been modified           |
+
 
 ** Usage (basic)
 Source the contents of =profile= into your bash shell. There's a lot
@@ -33,34 +50,30 @@ of stuff in there, mostly commented, but the core of it is:
 ** Usage (More fun)
 If you want to override the default prompts, here's what you can do.
 
-=GP_DEFAULT_PROMPT= is the prompt you see when not in a git repo.
+*** The default prompt
+=GP_DEFAULT_PROMPT= overrides the hard-coded prompt you see when not
+in a git repo. It is passed as-is to stdout, so your normal PS1 prompt
+can be set here.
 
+Example:
 #+begin_src bash
 export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
 #+end_src
 
-If you want to override the way the prompt looks inside of a git
-repo, then you'll need to set all four of these environment
-variables.
 
-This first envvar needs to be set to anything other than the empty
-string. If it is unset, the remaining three envvars will not be
-used.
+*** The git prompt
+=GP_GIT_PROMPT= overrides the hard-coded git prompt you see when not
+in a git repo. After some string replacements are done, it is passed
+to stdout as with the default prompt.
+
+The two colours (for unchanged and modified) can be (optionally)
+overridden as well.
+
+Example:
 #+begin_src bash
-export GP_USE_GIT_PROMPTS_FROM_ENV="true"
-#+end_src
-
-
-These three can be modified to your heart's content, assuming the
-above envvar has been set. There are two special strings which
-=generate_prompt= looks for: =repo_name= and =branch_name=. These will
-be replaced with the repo's name and the selected branch,
-respectively.
-
-#+begin_src bash
-export GP_UP_TO_DATE_PROMPT="UPTODATE: repo: repo_name, branch: branch_name $ ";
-export GP_MODIFIED_PROMPT="MODIFIED: repo: repo_name, branch: branch_name $ ";
-export GP_STAGED_PROMPT="STAGED: repo: repo_name, branch: branch_name $ ";
+export GP_GIT_PROMPT="[\pR/\pB][\pC]\n$ ";
+export GP_UP_TO_DATE="\033[0;32m"
+export GP_MODIFIED="\033[0;33m"
 #+end_src
 
 ** Dependencies
