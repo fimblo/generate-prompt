@@ -1,17 +1,17 @@
 * Ideas etc
 
 ** General directions to consider
-- Perhaps skip default prompts altogether. Depend entirely on envvar
+- [X] Perhaps skip default prompts altogether. Depend entirely on envvar
   prompts to digest. This will make code simpler. Add different
   profiles to source as examples.
 
-** Details/Refactor/Do Differently [6/8]
-- [ ] Re-write printPrompt
+** Details/Refactor/Do Differently [8/8]
+- [X] Re-write printPrompt
   - Take correct prompt string from env, then step through it. Normal
     characters are copied directly into the target string. If a '\' is
     detected,that and following 2 chars are studied. If one of the
     above, add correct string (repo name or branch) to target string.
-- [ ] Re-write printPrompt substitutions
+- [X] Re-write printPrompt substitutions
   - Use \p as a indicator to signal intent to generate-prompt. The \p
     will always be followed by one more character denoting the type of
     intent.
