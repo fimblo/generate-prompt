@@ -53,7 +53,6 @@ int main() {
   // if we can't get ref to repo, print defualt prompt
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
-    printNonGitPrompt();
     git_repository_free(repo);
     git_libgit2_shutdown();
     printNonGitPrompt();
@@ -75,10 +74,10 @@ int main() {
 
   git_reference *upstream_ref = NULL;
   if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
-    printNonGitPrompt();
     git_reference_free(head_ref);
     git_repository_free(repo);
     git_libgit2_shutdown();
+    printNonGitPrompt();
     return 1;
   }
   const git_oid *remote_commit_id = git_reference_target(upstream_ref);
@@ -98,6 +97,7 @@ int main() {
     git_reference_free(upstream_ref);
     git_reference_free(head_ref);
     git_repository_free(repo);
+    git_libgit2_shutdown();
     printNonGitPrompt();
     return 1;
   }
