@@ -1,25 +1,18 @@
 * generate-prompt
 [[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
 
-Simple and fast prompt for bash which shows git repo status
-
-** I wrote this because
-- I'm a bash user, and
-- bash functions to update the prompt when standing in a git repo is
-  just too slow
+Simple and fast prompt for bash which can show git repo status
 
 ** What does generate-prompt do?
 - It prints a useful prompt, for easy plugging into PS1.
 - It can tell if you're standing in a git repo or if you're outside of
   one. Depending on the situation, it will use one of the two main
   prompt types.
-- If you're in a git repo, it will by default show you:
-  - the name of the repo
-  - the name of the branch
-  - the basename of your current working directory
-- Depending on the state of your repo, it will highlight the above
-  three with one of two colours. See below for more details.
-- It allows you to modify the prompt to your liking (advanced usage).
+
+** I wrote this because
+- I'm a bash user, and
+- bash functions to update the prompt when standing in a git repo is
+  just too slow
 
 ** Showing state through colours
 When inside of a git repository, the prompt will tell you what state
@@ -28,10 +21,8 @@ the repo is in through the use of colours.
 
 | Repo name           | green  | there local and remote branches are the same |
 |                     | yellow | there is a difference.                       |
-|                     |        |                                              |
 | Branch name         | green  | there is nothing to commit                   |
 |                     | yellow | something was added, deleted, renamed, etc   |
-|                     |        |                                              |
 | Current working dir | green  | no tracked files have been modified          |
 |                     | yellow | tracked file(s) have been modified           |
 
