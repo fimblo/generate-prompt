@@ -10,14 +10,13 @@ prompt_cmd() {
 PROMPT_COMMAND=prompt_cmd
 
 
-unset GP_DEFAULT_PROMPT
 # This prompt is the one used by generate-prompt when standing outside
 # of a git repository. It's passed as-is as stdout.
 # Note: all terminal escape codes, if used, are preserved.
+unset GP_DEFAULT_PROMPT
 export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
 
 
-unset GP_GIT_PROMPT
 # This prompt is used when standing inside of a git repo. After the
 # special control sequences are replaced by generate-prompt, the
 # resulting string is sent to stdout.
@@ -39,6 +38,7 @@ unset GP_GIT_PROMPT
 #               yellow  some tracked file(s) have been modified
 #
 # Note: all terminal escape codes, if used, are preserved.
+unset GP_GIT_PROMPT
 export     GP_GIT_PROMPT="[\pR/\pB/\pC]\n$ ";
 
 
