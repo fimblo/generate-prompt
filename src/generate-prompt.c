@@ -199,7 +199,7 @@ void printNonGitPrompt() {
   printf( "\\W $ ");
 }
 
-/* -------------------------------------------------- 
+/* --------------------------------------------------
  *  When standing in a git repo, use this prompt.
  */
 void printGitPrompt(const struct GitStatus *status) {
@@ -211,7 +211,7 @@ void printGitPrompt(const struct GitStatus *status) {
 }
 
 
-/* -------------------------------------------------- 
+/* --------------------------------------------------
  * printGitPrompt helper
  */
 char* replace(const char* input, const struct GitStatus *status) {
@@ -220,17 +220,45 @@ char* replace(const char* input, const struct GitStatus *status) {
   colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
   colour[ RESET      ] = "\033[0m"; // RESET      - RESET to default
 
+
+  char wd[2048];
   char cwd[2048];
   getcwd(cwd, sizeof(cwd));
-  size_t common_length = strspn(status->repo_path, cwd);
-  char *rel_path = cwd + common_length;
+
+  const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
+
+  if (strcmp(wd_style, "cwd") == 0) {
+    // show the entire path, from $HOME
+    const char * home = getenv("HOME") ?: "";
+    size_t common_length = strspn(cwd, home);
+    sprintf(wd, "~/%s", cwd + common_length);
+  }
+  else if (strcmp(wd_style, "relpath") == 0) { //todo when with_root is added, rename this to _no_root
+    // show the entire path, from git-root (exclusive)
+    size_t common_length = strspn(status->repo_path, cwd);
+    sprintf(wd, "%s", cwd + common_length);
+    if (strlen(wd) == 0) {
+      sprintf(wd, "//");
+    }
+  }
+  /* else if (strcmp(wd_style, "relpath_with_root") == 0) { */
+  /*   // show the entire path, from git-root (inclusive) */
+  /*   size_t common_length = strspn(status->repo_path, cwd); */
+  /*   sprintf(wd, "%s", cwd + common_length); */
+  /* } */
+  else {
+    // basename - show current directory only
+    sprintf(wd, "%s", basename(cwd));
+  }
+
+
 
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[2048];
   sprintf(repo_temp, "%s%s%s", colour[status->repo], status->repo_name, colour[RESET]);
   sprintf(branch_temp, "%s%s%s", colour[status->index], status->branch_name, colour[RESET]);
-  sprintf(cwd_temp, "%sroot%s%s", colour[status->wdir], rel_path, colour[RESET]);
+  sprintf(cwd_temp, "%s%s%s", colour[status->wdir], wd, colour[RESET]);
 
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
