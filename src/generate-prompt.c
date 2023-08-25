@@ -212,15 +212,8 @@ void printGitPrompt(const struct GitStatus *status) {
 
 
 /* -------------------------------------------------- 
-  Function will look for the strings \pR, \pB, and \pC
-  Each, if found in `input`, will be replaced like so:
-
-  \pR: Replaced with repo_name
-  \pB: Replaced with "%s%s%s", colour[istatus], branch_name, colour[reset]
-  \pC: Replaced with "%s \w %s", colour[istatus], colour[reset]
-
-  Expect input like this:  "[\pR] [\pB] [\pC]"
-*/
+ * printGitPrompt helper
+ */
 char* replace(const char* input, const struct GitStatus *status) {
   const char *colour[3];
   colour[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
