@@ -46,6 +46,7 @@ int main() {
   // get path to git repo at '.' else print default prompt
   const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
   if (strlen(git_repository_path) == 0) {
+    free((void *) git_repository_path);
     printNonGitPrompt();
     return 0;
   }
@@ -53,6 +54,7 @@ int main() {
   // if we can't create repo object, print default prompt
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
+    free((void *) git_repository_path);
     printNonGitPrompt();
     return 0;
   }
@@ -61,6 +63,7 @@ int main() {
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
     git_repository_free(repo);
+    free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
     return 1;
@@ -82,6 +85,7 @@ int main() {
   if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
     git_reference_free(head_ref);
     git_repository_free(repo);
+    free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
     return 1;
@@ -110,6 +114,7 @@ int main() {
     git_reference_free(upstream_ref);
     git_reference_free(head_ref);
     git_repository_free(repo);
+    free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
     return 1;
@@ -143,6 +148,7 @@ int main() {
   git_reference_free(upstream_ref);
   git_reference_free(head_ref);
   git_repository_free(repo);
+  free((void *) git_repository_path);
   git_libgit2_shutdown();
 
   return 0;
