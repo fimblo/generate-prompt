@@ -11,9 +11,10 @@
  * Common global stuff
  */
 enum states {
-  UP_TO_DATE = 0,
-  MODIFIED   = 1,
-  RESET      = 2,
+  UP_TO_DATE  = 0,
+  MODIFIED    = 1,
+  NO_UPSTREAM = 2,
+  RESET       = 3,
 };
 
 struct GitStatus {
@@ -47,6 +48,7 @@ int main() {
   const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
   if (strlen(git_repository_path) == 0) {
     free((void *) git_repository_path);
+    printf("get repo path\n");
     printNonGitPrompt();
     return 0;
   }
@@ -55,6 +57,7 @@ int main() {
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
     free((void *) git_repository_path);
+    printf("get repo\n");
     printNonGitPrompt();
     return 0;
   }
@@ -65,6 +68,7 @@ int main() {
     git_repository_free(repo);
     free((void *) git_repository_path);
     git_libgit2_shutdown();
+    printf("get head ref\n");
     printNonGitPrompt();
     return 1;
   }
@@ -75,24 +79,6 @@ int main() {
   char full_local_branch_name[128];
   sprintf(full_local_branch_name, "refs/heads/%s",  branch_name);
 
-  // check if local and remote are the same
-  const git_oid *local_commit_id = git_reference_target(head_ref);
-
-  char full_remote_branch_name[128];
-  sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
-
-  git_reference *upstream_ref = NULL;
-  if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
-    git_reference_free(head_ref);
-    git_repository_free(repo);
-    free((void *) git_repository_path);
-    git_libgit2_shutdown();
-    printNonGitPrompt();
-    return 1;
-  }
-  const git_oid *remote_commit_id = git_reference_target(upstream_ref);
-
-
   struct GitStatus status;
   status.repo_name   = repo_name;
   status.branch_name = branch_name;
@@ -101,8 +87,23 @@ int main() {
   status.index       = UP_TO_DATE;
   status.wdir        = UP_TO_DATE;
 
-  if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
-    status.repo = MODIFIED;
+  char full_remote_branch_name[128];
+  sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
+
+  // If there is no upstream ref, this is probably a stand-alone branch
+  git_reference *upstream_ref = NULL;
+  if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
+    git_reference_free(upstream_ref);
+    status.repo = NO_UPSTREAM;
+  }
+
+  // check if local and remote are the same
+  if (status.repo == UP_TO_DATE) {
+    const git_oid *local_commit_id = git_reference_target(head_ref);
+    const git_oid *remote_commit_id = git_reference_target(upstream_ref);
+    if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
+      status.repo = MODIFIED;
+  }
 
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
@@ -116,6 +117,7 @@ int main() {
     git_repository_free(repo);
     free((void *) git_repository_path);
     git_libgit2_shutdown();
+    printf("get status list\n");
     printNonGitPrompt();
     return 1;
   }
@@ -221,10 +223,11 @@ void printGitPrompt(const struct GitStatus *status) {
  * printGitPrompt helper
  */
 char* replace(const char* input, const struct GitStatus *status) {
-  const char *colour[3];
-  colour[ UP_TO_DATE ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
-  colour[ MODIFIED   ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
-  colour[ RESET      ] = "\033[0m"; // RESET      - RESET to default
+  const char *colour[4];
+  colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
+  colour[ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
+  colour[ NO_UPSTREAM ] = getenv("GP_NO_UPSTREAM")   ?: "\033[0;37m";  // NO_UPSTREAM: default light grey
+  colour[ RESET       ] = "\033[0m"; // RESET      - RESET to default
 
 
   char wd[2048];
