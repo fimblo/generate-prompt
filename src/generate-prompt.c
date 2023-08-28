@@ -17,6 +17,7 @@ enum states {
   RESET       = 3,
 };
 
+// used to pass repo info around between functions
 struct RepoStatus {
   const char *repo_name;
   const char *branch_name;
@@ -30,13 +31,58 @@ struct RepoStatus {
 /* --------------------------------------------------
  * Declarations
  */
+
+
+/*
+  Prints a prompt which is useful outside of git repositories.
+  Respects the environment variable GP_DEFAULT_PROMPT to override the
+  built-in version of the prompt.
+*/
 void printNonGitPrompt();
+
+
+/*
+  Prints a prompt which is useful inside of git repositories.
+  Respects the environment variable GP_GIT_PROMPT to override the
+  built-in version of the prompt.
+*/
 void printGitPrompt(const struct RepoStatus *repo_status);
 
-// helpers
+
+/*
+  Given a path, looks recursively down toward the root of the
+  filesystem for a git project folder.
+
+  Returns absolute path to the git repository, sans the '.git/'
+  directory.
+*/
 const char* findGitRepositoryPath(const char *path);
+
+
+/*
+  Looks for reserved string sequences in <input>, and substitutes them
+  with highlighted replacements. For example '\pR' will be replaced
+  with the name of the git repository, formatted in colour.
+
+  Environment variables:
+
+  GP_UP_TO_DATE    : colour for up-to-date things
+  GP_MODIFIED      : colour for things which have changed
+  GP_NO_UPSTREAM   : colour for repos with no upstream branch
+  GP_GIT_WD_STYLE  : the style of the working directory substitution
+
+*/
 char* replace(const char* input, const struct RepoStatus *repo_status);
+
+
+/*
+  Helper for doing the actual substitution.
+*/
 char* substitute (const char * text, const char * search, const char * replacement);
+
+
+
+
 
 /* --------------------------------------------------
  * Functions
