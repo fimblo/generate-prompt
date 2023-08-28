@@ -270,7 +270,7 @@ char* replace(const char* input, const struct RepoStatus *repo_status) {
 
   char* output = strdup(input);
 
-  for (int i = 0; i < sizeof(searchStrings) / sizeof(searchStrings[0]); i++) {
+  for (unsigned long i = 0; i < sizeof(searchStrings) / sizeof(searchStrings[0]); i++) {
     const char* searchString = searchStrings[i];
     const char* replaceString = replaceStrings[i];
     output = substitute(output, searchString, replaceString);
