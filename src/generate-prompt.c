@@ -17,7 +17,7 @@ enum states {
   RESET       = 3,
 };
 
-struct GitStatus {
+struct RepoStatus {
   const char *repo_name;
   const char *branch_name;
   const char *repo_path;
@@ -31,11 +31,11 @@ struct GitStatus {
  * Declarations
  */
 void printNonGitPrompt();
-void printGitPrompt(const struct GitStatus *status);
+void printGitPrompt(const struct RepoStatus *repo_status);
 
 // helpers
 const char* findGitRepositoryPath(const char *path);
-char* replace(const char* input, const struct GitStatus *status);
+char* replace(const char* input, const struct RepoStatus *repo_status);
 char* substitute (const char * text, const char * search, const char * replacement);
 
 /* --------------------------------------------------
@@ -76,13 +76,13 @@ int main() {
   char full_local_branch_name[128];
   sprintf(full_local_branch_name, "refs/heads/%s",  branch_name);
 
-  struct GitStatus status;
-  status.repo_name   = repo_name;
-  status.branch_name = branch_name;
-  status.repo_path   = git_repository_path;
-  status.repo        = UP_TO_DATE;
-  status.index       = UP_TO_DATE;
-  status.wdir        = UP_TO_DATE;
+  struct RepoStatus repo_status;
+  repo_status.repo_name   = repo_name;
+  repo_status.branch_name = branch_name;
+  repo_status.repo_path   = git_repository_path;
+  repo_status.repo        = UP_TO_DATE;
+  repo_status.index       = UP_TO_DATE;
+  repo_status.wdir        = UP_TO_DATE;
 
   char full_remote_branch_name[128];
   sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
@@ -91,15 +91,15 @@ int main() {
   git_reference *upstream_ref = NULL;
   if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
     git_reference_free(upstream_ref);
-    status.repo = NO_UPSTREAM;
+    repo_status.repo = NO_UPSTREAM;
   }
 
   // check if local and remote are the same
-  if (status.repo == UP_TO_DATE) {
+  if (repo_status.repo == UP_TO_DATE) {
     const git_oid *local_commit_id = git_reference_target(head_ref);
     const git_oid *remote_commit_id = git_reference_target(upstream_ref);
     if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
-      status.repo = MODIFIED;
+      repo_status.repo = MODIFIED;
   }
 
   // set up git status
@@ -125,21 +125,21 @@ int main() {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_CURRENT)         continue;
 
-      if (entry->status & GIT_STATUS_INDEX_NEW)        status.index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   status.index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_RENAMED)    status.index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_DELETED)    status.index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_status.index = MODIFIED;
+      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_status.index = MODIFIED;
 
-      if (entry->status & GIT_STATUS_WT_RENAMED)       status.wdir = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_DELETED)       status.wdir = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_MODIFIED)      status.wdir = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_TYPECHANGE)    status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_RENAMED)       repo_status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_DELETED)       repo_status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_status.wdir = MODIFIED;
+      if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status.wdir = MODIFIED;
     }
   }
 
   // print the git prompt now that we have the info
-  printGitPrompt(&status);
+  printGitPrompt(&repo_status);
 
   // clean up before we end
   git_status_list_free(status_list);
@@ -206,9 +206,9 @@ void printNonGitPrompt() {
 /* --------------------------------------------------
  *  When standing in a git repo, use this prompt.
  */
-void printGitPrompt(const struct GitStatus *status) {
+void printGitPrompt(const struct RepoStatus *repo_status) {
   const char* input = getenv("GP_GIT_PROMPT");
-  char* output = replace(input, status);
+  char* output = replace(input, repo_status);
 
   printf("%s", output);
   free(output);
@@ -218,7 +218,7 @@ void printGitPrompt(const struct GitStatus *status) {
 /* --------------------------------------------------
  * printGitPrompt helper
  */
-char* replace(const char* input, const struct GitStatus *status) {
+char* replace(const char* input, const struct RepoStatus *repo_status) {
   const char *colour[4];
   colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   colour[ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
@@ -240,7 +240,7 @@ char* replace(const char* input, const struct GitStatus *status) {
   }
   else if (strcmp(wd_style, "relpath") == 0) { //todo when with_root is added, rename this to _no_root
     // show the entire path, from git-root (exclusive)
-    size_t common_length = strspn(status->repo_path, cwd);
+    size_t common_length = strspn(repo_status->repo_path, cwd);
     sprintf(wd, "%s", cwd + common_length);
     if (strlen(wd) == 0) {
       sprintf(wd, "//");
@@ -248,7 +248,7 @@ char* replace(const char* input, const struct GitStatus *status) {
   }
   /* else if (strcmp(wd_style, "relpath_with_root") == 0) { */
   /*   // show the entire path, from git-root (inclusive) */
-  /*   size_t common_length = strspn(status->repo_path, cwd); */
+  /*   size_t common_length = strspn(repo_status->repo_path, cwd); */
   /*   sprintf(wd, "%s", cwd + common_length); */
   /* } */
   else {
@@ -261,9 +261,9 @@ char* replace(const char* input, const struct GitStatus *status) {
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[2048];
-  sprintf(repo_temp, "%s%s%s", colour[status->repo], status->repo_name, colour[RESET]);
-  sprintf(branch_temp, "%s%s%s", colour[status->index], status->branch_name, colour[RESET]);
-  sprintf(cwd_temp, "%s%s%s", colour[status->wdir], wd, colour[RESET]);
+  sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
+  sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
+  sprintf(cwd_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
 
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
