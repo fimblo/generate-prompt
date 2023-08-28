@@ -39,12 +39,14 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 #
 # Note: all terminal escape codes, if used, are preserved.
 unset GP_GIT_PROMPT
-export     GP_GIT_PROMPT="[\pR/\pB/\pC]\n$ ";
+export GP_GIT_PROMPT="[\pR/\pB/\pC]\n$ ";
 
 
 unset GP_UP_TO_DATE
 unset GP_MODIFIED
+unset GP_NO_UPSTREAM
 # The state colours mentioned above can be overridden using these
 # environment variables.
 # export     GP_UP_TO_DATE="\033[0;32m"
 # export       GP_MODIFIED="\033[0;33m"
+# export     GP_NO_UPSTREAM="\033[0;37m"
