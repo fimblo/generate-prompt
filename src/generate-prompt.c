@@ -90,6 +90,11 @@ char* substitute (const char * text, const char * search, const char * replaceme
 int main() {
   git_libgit2_init();
 
+  struct RepoStatus repo_status;
+  repo_status.repo        = UP_TO_DATE;
+  repo_status.index       = UP_TO_DATE;
+  repo_status.wdir        = UP_TO_DATE;
+
   // get path to git repo at '.' else print default prompt
   const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
   if (strlen(git_repository_path) == 0) {
@@ -97,6 +102,7 @@ int main() {
     printNonGitPrompt();
     return 0;
   }
+  repo_status.repo_path   = git_repository_path;
 
   // if we can't create repo object, print default prompt
   git_repository *repo = NULL;
@@ -106,7 +112,7 @@ int main() {
     return 0;
   }
 
-  // if we can't get ref to repo, print defualt prompt
+  // if we can't get ref to repo, it means we haven't committed anything yet.
   git_reference *head_ref = NULL;
   if (git_repository_head(&head_ref, repo) != 0) {
     git_repository_free(repo);
@@ -117,18 +123,11 @@ int main() {
   }
 
   // get repo name and branch names
-  const char *repo_name = strrchr(git_repository_path, '/') + 1; // "projectName"
-  const char *branch_name = git_reference_shorthand(head_ref);
+  repo_status.repo_name = strrchr(git_repository_path, '/') + 1; // "projectName"
+  repo_status.branch_name = git_reference_shorthand(head_ref);
   char full_local_branch_name[128];
-  sprintf(full_local_branch_name, "refs/heads/%s",  branch_name);
+  sprintf(full_local_branch_name, "refs/heads/%s",  repo_status.branch_name);
 
-  struct RepoStatus repo_status;
-  repo_status.repo_name   = repo_name;
-  repo_status.branch_name = branch_name;
-  repo_status.repo_path   = git_repository_path;
-  repo_status.repo        = UP_TO_DATE;
-  repo_status.index       = UP_TO_DATE;
-  repo_status.wdir        = UP_TO_DATE;
 
   char full_remote_branch_name[128];
   sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
