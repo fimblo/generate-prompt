@@ -119,7 +119,7 @@ int main() {
     free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
-    return 1;
+    return 0;
   }
 
   // get repo name and branch names
@@ -160,7 +160,7 @@ int main() {
     free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
-    return 1;
+    return 0;
   }
 
   // check index and wt for diffs

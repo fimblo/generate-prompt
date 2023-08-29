@@ -69,12 +69,13 @@ export GP_MODIFIED="\033[0;33m"
 
 ** Dependencies
 - [[https://github.com/libgit2/libgit2][libgit2]]
+- [[https://github.com/bats-core/bats-core][bats-core]]
 
 ** Install
 
-- Install dependency:
-  - With homebrew: =brew install libgit2=
-  - With apt: =sudo apt install libgit2-dev=
+- Install dependencies:
+  - With homebrew: =brew install libgit2 bats-core=
+  - With apt: =sudo apt install libgit2-dev bats=
 - Run =make= to build generate-prompt. (tested on mac and ubuntu)
 - =make local-install= installs at ~/bin
 - =sudo make install= installs at /usr/local/bin
