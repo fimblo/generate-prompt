@@ -14,6 +14,11 @@ setup () {
   RUN_TMPDIR=$( mktemp -d "$BATS_TEST_TMPDIR/tmp.XXXXXX" )
   cd $RUN_TMPDIR
 
+  # colours used by generate-prompt
+  UP_TO_DATE="\033[0;32m"
+  MODIFIED="\033[0;33m"
+  NO_DATA="\033[0;37m"
+  RESET="\033[0m"
 
   # remove all relevant overrides
   unset GP_UP_TO_DATE
@@ -70,11 +75,11 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "that committing a file to repo returns git prompt" {
-  git init
-  touch FOO
-  git add FOO
-  git commit -m '.'
+@test "that committing a file to an empty repo shows R:no-up-ref, branch:up2date, wc:up2date" {
+  git init          >&2
+  touch FOO         >&2
+  git add FOO       >&2
+  git commit -m '.' >&2
 
 
   run -0 $GENERATE_PROMPT
@@ -82,9 +87,10 @@ teardown () {
   repo=$(basename $PWD)
   branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
-  
-  expected_prompt="REPO:${repo}:BRANCH:${branch}:WD:${wd}:"
-  
-  [ "$output" =  "$expected_prompt" ]
+
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
 
