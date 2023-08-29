@@ -13,7 +13,7 @@
 enum states {
   UP_TO_DATE  = 0,
   MODIFIED    = 1,
-  NO_UPSTREAM = 2,
+  NO_DATA     = 2,
   RESET       = 3,
 };
 
@@ -136,7 +136,7 @@ int main() {
   git_reference *upstream_ref = NULL;
   if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
     git_reference_free(upstream_ref);
-    repo_status.repo = NO_UPSTREAM;
+    repo_status.repo = NO_DATA;
   }
 
   // check if local and remote are the same
@@ -267,7 +267,7 @@ char* replace(const char* input, const struct RepoStatus *repo_status) {
   const char *colour[4];
   colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   colour[ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
-  colour[ NO_UPSTREAM ] = getenv("GP_NO_UPSTREAM")   ?: "\033[0;37m";  // NO_UPSTREAM: default light grey
+  colour[ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m";  // NO_DATA: default light grey
   colour[ RESET       ] = "\033[0m"; // RESET      - RESET to default
 
 
