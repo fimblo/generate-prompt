@@ -27,7 +27,6 @@ setup () {
   unset GP_DEFAULT_PROMPT
 
   export GP_GIT_PROMPT='REPO:\pR:BRANCH:\pB:WD:\pC:'
-
 }
 
 # run after each test
@@ -39,7 +38,12 @@ teardown () {
 
 # --------------------------------------------------
 @test "that default prompt shows in a non-git dir " {
+  # given we stand in a directory which isn't a git repo
+
+  # when we run the prompt
   run -0 $GENERATE_PROMPT
+
+  # then we should get the default prompt
   [ "$output" =  "\\W $ " ]
 }
 
@@ -47,43 +51,64 @@ teardown () {
 
 # --------------------------------------------------
 @test "that default prompt respects GP_DEFAULT_PROMPT" {
+  # given we set a envvar to override the default prompt
   export GP_DEFAULT_PROMPT="SOME STRING"
   
+  # when we run the prompt
   run -0 $GENERATE_PROMPT
+
+  # then it should return what we set to be the prompt
   [ "$output" = "SOME STRING" ]
 }
 
 
 # --------------------------------------------------
 @test "that creating an empty git repo returns default prompt" {
+  # given we create a repo - and we do nothing more
   git init
 
+  # when we run the prompt
   run -0 $GENERATE_PROMPT
+
+  # then it should behave as in a normal non-git repo
   [ "$output" =  "\\W $ " ]
 }
 
 
 # --------------------------------------------------
 @test "that adding one file to repo returns default prompt" {
+  # given we create a repo, add a file but don't commit
   git init
   touch FOO
   git add FOO
 
+  # when we run the prompt
   run -0 $GENERATE_PROMPT
+
+  # then we should get the default non-git prompt
   [ "$output" =  "\\W $ " ]
 }
 
 
 # --------------------------------------------------
 @test "that committing a file to an empty repo shows R:no-up-ref, branch:up2date, wc:up2date" {
+  # given we create a repo and commit a file
   git init          >&2
   touch FOO         >&2
   git add FOO       >&2
   git commit -m '.' >&2
 
-
+  # when we run the prompt
   run -0 $GENERATE_PROMPT
 
+  # then we should get a git prompt, where
+  # - the repo name should be the folder name and upstream ref is
+  #   undefined (NO_DATA)
+  # - the branch name should be what is written in .git/HEAD, and
+  #   status is up-to-date (all added changes are committed)
+  # - the working directory should be the folder name and status is
+  #   up-to-date (there are no tracked files which are modified.)
+  # 
   repo=$(basename $PWD)
   branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
