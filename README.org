@@ -9,6 +9,8 @@ Simple and fast prompt for bash which can show git repo status
   one. Depending on the situation, it will use one of the two main
   prompt types.
 
+[[file:recording.gif]]
+
 ** I wrote this because
 - I'm a bash user, and
 - bash functions to update the prompt when standing in a git repo is
