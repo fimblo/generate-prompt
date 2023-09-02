@@ -149,3 +149,33 @@ teardown () {
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
 }
+
+
+# --------------------------------------------------
+@test "changing branch updates prompt" {
+  # given we have a git repo
+  git init
+  touch FOO
+  git add FOO
+  git commit -m '.'
+
+  # given we change branch
+  git checkout -b featureBranch
+
+  # when we run the prompt
+  run -0 $GENERATE_PROMPT
+
+  # then we should get a git prompt, where
+  # - the branch name should be featureBranch
+
+  repo=$(basename $PWD)
+  branch="featureBranch"
+  wd=$(basename $PWD)
+
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
