@@ -27,6 +27,12 @@ setup () {
   unset GP_DEFAULT_PROMPT
 
   export GP_GIT_PROMPT='REPO:\pR:BRANCH:\pB:WD:\pC:'
+
+  # set global git user/email if it is not set
+  if ! [ -e ~/.gitconfig ] ; then
+    git config --global user.email "my@test.com"
+    git config --global user.name "Test Person"
+  fi
 }
 
 # run after each test

@@ -1,4 +1,4 @@
-name: build
+name: "Build and test"
 
 on:
   push:
@@ -14,14 +14,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install git2.h
-      run: sudo apt-get install libgit2-dev
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libgit2-dev
+
+        curl -Lo bats-core.tar.gz https://github.com/bats-core/bats-core/archive/v1.10.0.tar.gz
+        tar -xzf bats-core.tar.gz
+        cd bats-core-1.10.0
+        sudo ./install.sh /usr/local
 
     - name: Run make
       run: make
 
-
-#    - name: make check
-#      run: make check
-#    - name: make distcheck
-#      run: make distcheck
+    - name: Run tests
+      run: bats test
