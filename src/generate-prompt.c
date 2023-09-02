@@ -60,22 +60,6 @@ const char* findGitRepositoryPath(const char *path);
 
 
 /*
-  Looks for reserved string sequences in <input>, and substitutes them
-  with highlighted replacements. For example '\pR' will be replaced
-  with the name of the git repository, formatted in colour.
-
-  Environment variables:
-
-  GP_UP_TO_DATE    : colour for up-to-date things
-  GP_MODIFIED      : colour for things which have changed
-  GP_NO_UPSTREAM   : colour for repos with no upstream branch
-  GP_GIT_WD_STYLE  : the style of the working directory substitution
-
-*/
-char* replace(const char* input, const struct RepoStatus *repo_status);
-
-
-/*
   Helper for doing the actual substitution.
 */
 char* substitute (const char * text, const char * search, const char * replacement);
@@ -247,31 +231,22 @@ void printNonGitPrompt() {
  *  When standing in a git repo, use this prompt.
  */
 void printGitPrompt(const struct RepoStatus *repo_status) {
+
+  // handle environment variables and defualt values
   const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pB/\\pC]\n$ ";
-  char* prompt = replace(undigestedPrompt, repo_status);
 
-  printf("%s", prompt);
-  free(prompt);
-}
-
-
-/* --------------------------------------------------
- * printGitPrompt helper
- */
-char* replace(const char* input, const struct RepoStatus *repo_status) {
   const char *colour[4];
   colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   colour[ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
   colour[ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m";  // NO_DATA: default light grey
   colour[ RESET       ] = "\033[0m"; // RESET      - RESET to default
 
-
-  char wd[2048];
-  char cwd[2048];
-  getcwd(cwd, sizeof(cwd));
-
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
 
+
+  char cwd[2048]; // for output from getcwd
+  char wd[2048];  // for storing the preferred working directory string style
+  getcwd(cwd, sizeof(cwd));
   if (strcmp(wd_style, "cwd") == 0) {
     // show the entire path, from $HOME
     const char * home = getenv("HOME") ?: "";
@@ -296,8 +271,6 @@ char* replace(const char* input, const struct RepoStatus *repo_status) {
     sprintf(wd, "%s", basename(cwd));
   }
 
-
-
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[2048];
@@ -308,17 +281,17 @@ char* replace(const char* input, const struct RepoStatus *repo_status) {
   const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
 
-  char* output = strdup(input);
+  char* prompt = strdup(undigestedPrompt);
 
   for (unsigned long i = 0; i < sizeof(searchStrings) / sizeof(searchStrings[0]); i++) {
     const char* searchString = searchStrings[i];
     const char* replaceString = replaceStrings[i];
-    output = substitute(output, searchString, replaceString);
+    prompt = substitute(prompt, searchString, replaceString);
   }
 
-  return output;
+  printf("%s", prompt);
+  free(prompt);
 }
-
 
 
 
