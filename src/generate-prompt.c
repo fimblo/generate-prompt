@@ -25,6 +25,8 @@ struct RepoStatus {
   int repo;
   int index;
   int wdir;
+  int ahead;
+  int behind;
 };
 
 
@@ -60,11 +62,19 @@ const char* findGitRepositoryPath(const char *path);
 
 
 /*
+  Returns how far ahead/behind local repo is when compared to upstream
+ */
+int calculateAheadBehind(git_repository *repo,
+                         const git_oid *local_oid,
+                         const git_oid *upstream_oid,
+                         int *ahead,
+                         int *behind);
+
+
+/*
   Helper for doing the actual substitution.
 */
 char* substitute (const char * text, const char * search, const char * replacement);
-
-
 
 
 
@@ -78,6 +88,8 @@ int main() {
   repo_status.repo        = UP_TO_DATE;
   repo_status.index       = UP_TO_DATE;
   repo_status.wdir        = UP_TO_DATE;
+  repo_status.ahead       = 0;
+  repo_status.behind      = 0;
 
   // get path to git repo at '.' else print default prompt
   const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
@@ -98,6 +110,7 @@ int main() {
 
   // if we can't get ref to repo, it means we haven't committed anything yet.
   git_reference *head_ref = NULL;
+  const git_oid *head_oid;
   if (git_repository_head(&head_ref, repo) != 0) {
     git_repository_free(repo);
     free((void *) git_repository_path);
@@ -105,6 +118,7 @@ int main() {
     printNonGitPrompt();
     return 0;
   }
+  head_oid = git_reference_target(head_ref);
 
   // get repo name and branch names
   repo_status.repo_name = strrchr(git_repository_path, '/') + 1; // "projectName"
@@ -118,18 +132,22 @@ int main() {
 
   // If there is no upstream ref, this is probably a stand-alone branch
   git_reference *upstream_ref = NULL;
+  const git_oid *upstream_oid;
   if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
     git_reference_free(upstream_ref);
     repo_status.repo = NO_DATA;
   }
-
+  else {
+    upstream_oid = git_reference_target(upstream_ref);
+    calculateAheadBehind(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
+  }
+  
   // check if local and remote are the same
   if (repo_status.repo == UP_TO_DATE) {
-    const git_oid *local_commit_id = git_reference_target(head_ref);
-    const git_oid *remote_commit_id = git_reference_target(upstream_ref);
-    if (git_oid_cmp(local_commit_id, remote_commit_id) != 0)
+    if (git_oid_cmp(head_oid, upstream_oid) != 0)
       repo_status.repo = MODIFIED;
   }
+
 
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
@@ -232,7 +250,7 @@ void printNonGitPrompt() {
  */
 void printGitPrompt(const struct RepoStatus *repo_status) {
 
-  // handle environment variables and defualt values
+  // handle environment variables and default values
   const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pB/\\pC]\n$ ";
 
   const char *colour[4];
@@ -244,6 +262,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
 
 
+  // handle WD field
   char cwd[2048]; // for output from getcwd
   char wd[2048];  // for storing the preferred working directory string style
   getcwd(cwd, sizeof(cwd));
@@ -271,15 +290,27 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(wd, "%s", basename(cwd));
   }
 
+
+  // look for and substitute escape codes
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[2048];
+  char ab_temp[16]; // ahead - behind
+
+  
   sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
   sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
   sprintf(cwd_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
+  
+  if (repo_status->ahead + repo_status->behind != 0)
+    sprintf(ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
+  else
+    ab_temp[0] = '\0';
+    
 
-  const char* searchStrings[] = { "\\pR", "\\pB", "\\pC" };
-  const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp };
+
+  const char* searchStrings[] = { "\\pR", "\\pB", "\\pC", "\\pd" };
+  const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp, ab_temp};
 
   char* prompt = strdup(undigestedPrompt);
 
@@ -291,6 +322,54 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
   printf("%s", prompt);
   free(prompt);
+}
+
+
+/*
+ * Calculate the number of commits ahead and behind the local branch is
+ * compared to its upstream branch.
+ * @return 0 on success, non-0 on error.
+ */
+int calculateAheadBehind(git_repository *repo,
+                         const git_oid *local_oid,
+                         const git_oid *upstream_oid,
+                         int *ahead,
+                         int *behind) {
+  int aheadCount = 0;
+  int behindCount = 0;
+  git_oid id;
+
+
+  // init walker
+  git_revwalk *walker = NULL;
+  if (git_revwalk_new(&walker, repo) != 0) {
+    return -1;
+  }
+
+  // count number of commits ahead
+  if (git_revwalk_push(walker, local_oid)    != 0 ||  // set where I want to start
+      git_revwalk_hide(walker, upstream_oid) != 0) {  // set where the walk ends (exclusive)
+    git_revwalk_free(walker);
+    return -2;
+  }
+  while (git_revwalk_next(&id, walker) == 0) aheadCount++;
+
+
+  // count number of commits behind
+  git_revwalk_reset(walker);
+  if (git_revwalk_push(walker, upstream_oid) != 0 || // set where I want to start          
+      git_revwalk_hide(walker, local_oid)    != 0) { // set where the walk ends (exclusive)
+    git_revwalk_free(walker);
+    return -3;
+  }
+  while (git_revwalk_next(&id, walker) == 0) behindCount++;
+
+
+  *ahead = aheadCount;
+  *behind = behindCount;
+
+  git_revwalk_free(walker);
+  return 0;
 }
 
 
