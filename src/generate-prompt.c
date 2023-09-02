@@ -239,24 +239,19 @@ const char* findGitRepositoryPath(const char *path) {
  * use this prompt.
  */
 void printNonGitPrompt() {
-  const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT");
-  if (defaultPrompt) {
-    printf("%s", defaultPrompt);
-    return;
-  }
-
-  printf( "\\W $ ");
+  const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT") ?: "\\W $ ";
+  printf("%s", defaultPrompt);
 }
 
 /* --------------------------------------------------
  *  When standing in a git repo, use this prompt.
  */
 void printGitPrompt(const struct RepoStatus *repo_status) {
-  const char* input = getenv("GP_GIT_PROMPT");
-  char* output = replace(input, repo_status);
+  const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pB/\\pC]\n$ ";
+  char* prompt = replace(undigestedPrompt, repo_status);
 
-  printf("%s", output);
-  free(output);
+  printf("%s", prompt);
+  free(prompt);
 }
 
 
