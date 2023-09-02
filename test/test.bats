@@ -37,7 +37,7 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "that default prompt shows in a non-git dir " {
+@test "default prompt is displayed when not in a git repository" {
   # given we stand in a directory which isn't a git repo
 
   # when we run the prompt
@@ -50,7 +50,7 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "that default prompt respects GP_DEFAULT_PROMPT" {
+@test "override default prompt with GP_DEFAULT_PROMPT" {
   # given we set a envvar to override the default prompt
   export GP_DEFAULT_PROMPT="SOME STRING"
   
@@ -63,7 +63,7 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "that creating an empty git repo returns default prompt" {
+@test "empty git repository shows default prompt" {
   # given we create a repo - and we do nothing more
   git init
 
@@ -76,7 +76,7 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "that adding one file to repo returns default prompt" {
+@test "adding file to git repo doesn't alter prompt" {
   # given we create a repo, add a file but don't commit
   git init
   touch FOO
@@ -91,7 +91,7 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "that committing a file to an empty repo shows R:no-up-ref, branch:up2date, wc:up2date" {
+@test "committing in empty git repo updates prompt" {
   # given we create a repo and commit a file
   git init          >&2
   touch FOO         >&2
