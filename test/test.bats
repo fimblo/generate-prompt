@@ -119,3 +119,33 @@ teardown () {
   [ "$output" =  "$evaluated_prompt" ]
 }
 
+
+# --------------------------------------------------
+@test "modifying tracked file updates prompt" {
+  # given we modify a tracked file
+  git init
+  touch FOO
+  git add FOO
+  git commit -m '.'
+  echo > FOO
+
+  # when we run the prompt
+  run -0 $GENERATE_PROMPT
+
+  # then we should get a git prompt, where
+  # - the repo name should be the folder name and upstream ref is
+  #   undefined (NO_DATA)
+  # - the branch name should be what is written in .git/HEAD, and
+  #   status is up-to-date (all added changes are committed)
+  # - the working directory should be the folder name and status is
+  #   modified
+  # 
+  repo=$(basename $PWD)
+  branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+  wd=$(basename $PWD)
+
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${MODIFIED}${wd}${RESET}:"
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
