@@ -114,6 +114,8 @@ teardown () {
   wd=$(basename $PWD)
 
   expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
 
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
@@ -145,6 +147,8 @@ teardown () {
   wd=$(basename $PWD)
 
   expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${MODIFIED}${wd}${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
 
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
