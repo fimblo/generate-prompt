@@ -179,3 +179,39 @@ teardown () {
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
 }
+
+
+# --------------------------------------------------
+@test "cloning a repo and entering it updates prompt" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  git init
+  touch FOO
+  git add FOO
+  git commit -m 'Initial commit'
+  cd -
+
+  # given we clone it
+  mkdir tmp
+  cd tmp
+  git clone ../myRepo
+  cd myRepo
+
+
+  # when we run the prompt
+  run -0 $GENERATE_PROMPT
+
+  # then we should get a git prompt
+  # where each of the three fields are up-to-date
+  repo=$(basename $(git rev-parse --show-toplevel))
+  branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+  wd=$(basename $PWD)
+
+  expected_prompt="REPO:${UP_TO_DATE}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
