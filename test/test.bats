@@ -102,14 +102,14 @@ teardown () {
   run -0 $GENERATE_PROMPT
 
   # then we should get a git prompt, where
-  # - the repo name should be the folder name and upstream ref is
+  # - the repo name should be the git project name and upstream ref is
   #   undefined (NO_DATA)
   # - the branch name should be what is written in .git/HEAD, and
   #   status is up-to-date (all added changes are committed)
   # - the working directory should be the folder name and status is
   #   up-to-date (there are no tracked files which are modified.)
   # 
-  repo=$(basename $PWD)
+  repo=$(basename $(git rev-parse --show-toplevel))
   branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
 
@@ -133,14 +133,14 @@ teardown () {
   run -0 $GENERATE_PROMPT
 
   # then we should get a git prompt, where
-  # - the repo name should be the folder name and upstream ref is
+  # - the repo name should be the git project name and upstream ref is
   #   undefined (NO_DATA)
   # - the branch name should be what is written in .git/HEAD, and
   #   status is up-to-date (all added changes are committed)
   # - the working directory should be the folder name and status is
   #   modified
   # 
-  repo=$(basename $PWD)
+  repo=$(basename $(git rev-parse --show-toplevel))
   branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
 
@@ -168,7 +168,7 @@ teardown () {
   # then we should get a git prompt, where
   # - the branch name should be featureBranch
 
-  repo=$(basename $PWD)
+  repo=$(basename $(git rev-parse --show-toplevel))
   branch="featureBranch"
   wd=$(basename $PWD)
 
