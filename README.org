@@ -41,38 +41,42 @@ of stuff in there, mostly commented, but the core of it is:
 #+end_src
 
 ** Usage (More fun)
-Generate-prompt was designed to be configured. The defaults should work well enough, but if you want to modify the look of the prompt, read on.
+Generate-prompt was designed to be configured. The defaults should
+work well enough, but if you want to modify the look of the prompt,
+read on.
 
-*** Special instructions
+*** Instructions
 
 #+begin_src bash
 export GP_GIT_PROMPT="[\pR][\pL][\pC]\n$ "
 #+end_src
 
 The strings in the example above which begin with =\p= are
-three-character instructions which generate-prompt looks for. These,
+three-character Instructions which generate-prompt looks for. These,
 if found, are replaced with other content.
 
 For example, =\pC= is replaced with the name of the current working
 directory you're standing in.
 
-Currently supported special instructions:
+Currently supported Instructions:
 - =\pR= replaced with the git repo name, coloured with state                    
 - =\pL= replaced with the local branch name, coloured with state                
 - =\pC= replaced with the current working directory(cwd), coloured with state   
-- =\pa= replaced with diff to upstream ref (ahead, behind)                      
-- =\pb= replaced with number of commits local is ahead of upstream              
-- =\pd= replaced with number of commits local is behind of upstream
+- =\pa= replaced with number of commits local is ahead of upstream              
+- =\pb= replaced with number of commits local is behind of upstream
+- =\pd= replaced with diff to upstream ref (ahead and behind, combined)
 
-Note that upper-case instructions are decorated with Pre- and postfix patterns (see below)
+Note that upper-case Instructions are decorated with Pre- and postfix
+patterns (see below)
 
 *** Instruction Styles
-Special instructions can be further configured using Styles. 
+Instructions can be further configured using Styles. 
 
 **** =\pC= Styles
 The part of the prompt which shows the current working directory, is
-governed by the =\pC= Special instruction. To change its style, you
-can set the =GP_GIT_WD_STYLE= to one of styles below.
+governed by the =\pC= Instruction. To change its style, you
+can set the environment variable =GP_GIT_WD_STYLE= to one of styles
+below.
 
 - If unset or set to =basename=, =\pC= will output the basename of CWD.
 - If set to =cwd=,  output the full path from the user's =$HOME=.
@@ -82,7 +86,7 @@ can set the =GP_GIT_WD_STYLE= to one of styles below.
 These are environment variables which override some particular part of
 the default look of generate-prompt.
 
-Generate-prompt will look for Special instructions (see above) inside
+Generate-prompt will look for Instructions (see above) inside
 of these patterns, and replace them with specific strings which depend
 on the current context.
 
@@ -108,14 +112,14 @@ export GP_GIT_PROMPT="[\pR][\pL][\pC]\n$ "
 
 You may have noticed that there are three peculiar substrings in the
 example above, which start with a =\p=, followed by a character. These
-are the Special instructions mentioned above.
+are the [[#instructions][Instructions]] mentioned above.
 
 **** Pre- and postfix patterns
-Some special instructions will decorate the output with colours,
+Some Instructions will decorate the output with colours,
 depending on context.
 
 For example, if you are standing in a git repo and change a tracked
-file, then the current working directory instruction (=\pC=) will
+file, then the current working directory Instruction (=\pC=) will
 change the colour of its output to indicate a status change. Once the
 change is staged, it will once again revert to its original colour.
 
