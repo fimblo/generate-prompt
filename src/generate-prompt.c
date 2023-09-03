@@ -263,7 +263,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
 
 
-  // handle WD field
+  // handle working directory (wd) field
   char full_path[2048]; // for output from getcwd
   char wd[2048];  // for storing the preferred working directory string style
   getcwd(full_path, sizeof(full_path));
@@ -292,14 +292,13 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   }
 
 
-  // look for and substitute escape codes
+  // prepare all substitutions
   char repo_temp[256]   = { '\0' };
   char branch_temp[256] = { '\0' };
   char cwd_temp[2048]   = { '\0' };
   char ab_temp[16]      = { '\0' }; // (ahead|-behind)
   char a_temp[4]        = { '\0' }; // ahead
   char b_temp[4]        = { '\0' }; // behind
-
 
   sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
   sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
@@ -315,16 +314,14 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(b_temp, "%d", repo_status->behind);
 
 
-
-  const char* searchStrings[] = { "\\pR", "\\pL", "\\pC", "\\pd", "\\pa", "\\pb" };
-  const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp, ab_temp, a_temp, b_temp};
+  // apply all instructions found
+  const char* instructions[] = { "\\pR", "\\pL", "\\pC", "\\pd", "\\pa", "\\pb" };
+  const char* replacements[] = { repo_temp, branch_temp, cwd_temp, ab_temp, a_temp, b_temp};
 
   char* prompt = strdup(undigestedPrompt);
 
-  for (unsigned long i = 0; i < sizeof(searchStrings) / sizeof(searchStrings[0]); i++) {
-    const char* searchString = searchStrings[i];
-    const char* replaceString = replaceStrings[i];
-    prompt = substitute(prompt, searchString, replaceString);
+  for (unsigned long i = 0; i < sizeof(instructions) / sizeof(instructions[0]); i++) {
+    prompt = substitute(prompt, instructions[i], replacements[i]);
   }
 
   printf("%s", prompt);
