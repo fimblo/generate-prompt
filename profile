@@ -22,6 +22,7 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 # resulting string is sent to stdout.
 #
 # Special control sequences:
+#   \pd    replaced with diff to upstream ref (ahead, behind)
 #   \pR    replaced with the git repo name, coloured with state
 #   \pB    replaced with the local branch name, coloured with state
 #   \pC    replaced with the current working directory(cwd), coloured with state
