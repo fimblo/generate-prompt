@@ -8,8 +8,12 @@
 #
 
 
+##################################################
+# Activate generate-prompt
+#
+# This assumes that the binary generate-prompt has been copied into PATH
+# Use `make install` or `make install-local` to make it so.
 prompt_cmd() {
-  # This assumes that the binary generate-prompt has been copied into PATH
   PS1="$(generate-prompt)"
 }
 PROMPT_COMMAND=prompt_cmd
