@@ -254,42 +254,41 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
   // handle environment variables and default values
   const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\n$ ";
-
-  const char *colour[4];
-  colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
-  colour[ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
-  colour[ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m";  // NO_DATA: default light grey
-  colour[ RESET       ] = getenv("GP_RESET")      ?: "\033[0m";    // RESET      - RESET to default
-
+  const char *colour[4] = {
+    [ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m",  // UP_TO_DATE - default green
+    [ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m",  // MODIFIED   - default yellow
+    [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",  // NO_DATA: default light grey
+    [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"      // RESET      - RESET to default
+  };
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
 
 
   // handle WD field
-  char cwd[2048]; // for output from getcwd
+  char full_path[2048]; // for output from getcwd
   char wd[2048];  // for storing the preferred working directory string style
-  getcwd(cwd, sizeof(cwd));
+  getcwd(full_path, sizeof(full_path));
   if (strcmp(wd_style, "cwd") == 0) {
     // show the entire path, from $HOME
     const char * home = getenv("HOME") ?: "";
-    size_t common_length = strspn(cwd, home);
-    sprintf(wd, "~/%s", cwd + common_length);
+    size_t common_length = strspn(full_path, home);
+    sprintf(wd, "~/%s", full_path + common_length);
   }
   else if (strcmp(wd_style, "gitrelpath") == 0) { //todo when with_root is added, rename this to _no_root
     // show the entire path, from git-root (exclusive)
-    size_t common_length = strspn(repo_status->repo_path, cwd);
-    sprintf(wd, "%s", cwd + common_length);
+    size_t common_length = strspn(repo_status->repo_path, full_path);
+    sprintf(wd, "%s", full_path + common_length);
     if (strlen(wd) == 0) {
       sprintf(wd, "//");
     }
   }
   /* else if (strcmp(wd_style, "relpath_with_root") == 0) { */
   /*   // show the entire path, from git-root (inclusive) */
-  /*   size_t common_length = strspn(repo_status->repo_path, cwd); */
-  /*   sprintf(wd, "%s", cwd + common_length); */
+  /*   size_t common_length = strspn(repo_status->repo_path, full_path); */
+  /*   sprintf(wd, "%s", full_path + common_length); */
   /* } */
   else {
     // basename - show current directory only
-    sprintf(wd, "%s", basename(cwd));
+    sprintf(wd, "%s", basename(full_path));
   }
 
 
