@@ -41,45 +41,97 @@ of stuff in there, mostly commented, but the core of it is:
 #+end_src
 
 ** Usage (More fun)
-If you want to override the default prompts, here's what you can do.
+Generate-prompt was designed to be configured. The defaults should work well enough, but if you want to modify the look of the prompt, read on.
 
-*** The default prompt
-=GP_DEFAULT_PROMPT= overrides the hard-coded prompt you see when not
-in a git repo. It is passed as-is to stdout, so your normal PS1 prompt
-can be set here.
+*** Special instructions
+
+#+begin_src bash
+export GP_GIT_PROMPT="[\pR][\pL][\pC]\n$ "
+#+end_src
+
+The strings in the example above which begin with =\p= are
+three-character instructions which generate-prompt looks for. These,
+if found, are replaced with other content.
+
+For example, =\pC= is replaced with the name of the current working
+directory you're standing in.
+
+Currently supported special instructions:
+- =\pR= replaced with the git repo name, coloured with state                    
+- =\pL= replaced with the local branch name, coloured with state                
+- =\pC= replaced with the current working directory(cwd), coloured with state   
+- =\pa= replaced with diff to upstream ref (ahead, behind)                      
+- =\pb= replaced with number of commits local is ahead of upstream              
+- =\pd= replaced with number of commits local is behind of upstream
+
+Note that upper-case instructions are decorated with Pre- and postfix patterns (see below)
+
+
+*** Patterns
+These are environment variables which override some particular part of
+the default look of generate-prompt.
+
+Generate-prompt will look for Special instructions (see above) inside
+of these patterns, and replace them with specific strings which depend
+on the current context.
+
+**** The default prompt pattern
+=GP_DEFAULT_PROMPT= is a pattern which overrides the hard-coded prompt
+you see when not in a git repo. It is passed as-is to stdout, so your
+normal PS1 prompt can be set here.
 
 Example:
 #+begin_src bash
 export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\] $ "
 #+end_src
 
-
-*** The git prompt
-=GP_GIT_PROMPT= overrides the hard-coded git prompt you see when not
-in a git repo. After some string replacements are done, it is passed
-to stdout as with the default prompt.
-
-The two colours (for unchanged and modified) can be (optionally)
-overridden as well.
+**** The git prompt pattern
+=GP_GIT_PROMPT= pattern overrides the hard-coded git prompt you see
+when in a git repo. After some string replacements are done, it is
+passed to stdout like it does with the default prompt.
 
 Example:
 #+begin_src bash
-export GP_GIT_PROMPT="[\pR/\pL][\pC]\n$ "
-export GP_UP_TO_DATE="\033[0;32m"
-export GP_MODIFIED="\033[0;33m"
+export GP_GIT_PROMPT="[\pR][\pL][\pC]\n$ "
 #+end_src
 
-*** generate-prompt special instructions
-- =\pR= Replaced with the repo name, coloured with state
-- =\pL= Replaced with local branch name, coloured with state
-- =\pC= Replaced with current working directory*, coloured with state
-- =\pd= Replaced with '(a|b)', where 'a' and 'b' are the local ref's
-  number of commits ahead and behind upstream ref, respectively. If
-  these are both zero, the instruction is replaced with the empty
-  string.
-- =\pa= Replaced with number of commits local repo is ahead of upstream ref.
-- =\pb= Replaced with number of commits local repo is behind of upstream ref.
-  
+You may have noticed that there are three peculiar substrings in the
+example above, which start with a =\p=, followed by a character. These
+are the Special instructions mentioned above.
+
+**** Pre- and postfix patterns
+Some special instructions will decorate the output with colours,
+depending on context.
+
+For example, if you are standing in a git repo and change a tracked
+file, then the current working directory instruction (=\pC=) will
+change the colour of its output to indicate a status change. Once the
+change is staged, it will once again revert to its original colour.
+
+Prefix patterns:
+#+begin_src bash
+ export GP_UP_TO_DATE="\033[0;32m"
+ export GP_MODIFIED="\033[0;33m"
+ export GP_NO_DATA="\033[0;37m"
+#+end_src
+
+Postfix patterns:
+#+begin_src bash
+ export GP_RESET="\033[0m"
+#+end_src
+
+Though these are all currently used for colours, one can use these for
+arbitrary text.
+
+
+
+*** Styles
+Currently, =\pC= (current working directory) can be further configured
+using the =GP_GIT_WD_STYLE= environment variable.
+
+- If unset or set to =basename=, =\pC= will output the basename of CWD.
+- If set to =cwd=,  output the full path from the user's =$HOME=.
+- If set to =gitrelpath=, output the full path from git-root (exclusive)
 
 ** Dependencies
 - [[https://github.com/libgit2/libgit2][libgit2]]
