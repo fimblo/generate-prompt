@@ -25,6 +25,9 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 unset GP_GIT_PROMPT
 export GP_GIT_PROMPT="[\pR/\pL/\pC]\n$ ";
 
+# All instructions, mostly for testing
+# export GP_GIT_PROMPT="[\pb\pR\pa\pd/\pL/\pC]\n$ ";
+
 
 unset GP_UP_TO_DATE
 unset GP_MODIFIED
