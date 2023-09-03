@@ -1,4 +1,4 @@
-/* --------------------------------------------------
+/** --------------------------------------------------
  * Includes
  */
 #include <stdio.h>
@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <libgen.h>
 
-/* --------------------------------------------------
+/** --------------------------------------------------
  * Common global stuff
  */
 enum states {
@@ -30,12 +30,12 @@ struct RepoStatus {
 };
 
 
-/* --------------------------------------------------
+/** --------------------------------------------------
  * Declarations
  */
 
 
-/*
+/**
   Prints a prompt which is useful outside of git repositories.
   Respects the environment variable GP_DEFAULT_PROMPT to override the
   built-in version of the prompt.
@@ -43,7 +43,7 @@ struct RepoStatus {
 void printNonGitPrompt();
 
 
-/*
+/**
   Prints a prompt which is useful inside of git repositories.
   Respects the environment variable GP_GIT_PROMPT to override the
   built-in version of the prompt.
@@ -51,7 +51,7 @@ void printNonGitPrompt();
 void printGitPrompt(const struct RepoStatus *repo_status);
 
 
-/*
+/**
   Given a path, looks recursively down toward the root of the
   filesystem for a git project folder.
 
@@ -61,7 +61,7 @@ void printGitPrompt(const struct RepoStatus *repo_status);
 const char* findGitRepositoryPath(const char *path);
 
 
-/*
+/**
   Returns how far ahead/behind local repo is when compared to upstream
  */
 int calculateAheadBehind(git_repository *repo,
@@ -71,14 +71,14 @@ int calculateAheadBehind(git_repository *repo,
                          int *behind);
 
 
-/*
+/**
   Helper for doing the actual substitution.
 */
 char* substitute (const char * text, const char * search, const char * replacement);
 
 
 
-/* --------------------------------------------------
+/** --------------------------------------------------
  * Functions
  */
 int main() {
@@ -200,7 +200,7 @@ int main() {
 }
 
 
-/* --------------------------------------------------
+/**
  * Return path to repo else empty string
  */
 const char* findGitRepositoryPath(const char *path) {
@@ -236,7 +236,8 @@ const char* findGitRepositoryPath(const char *path) {
   }
 }
 
-/* --------------------------------------------------
+
+/**
  * When standing in a non-git repo, or if the git prompt doesn't work,
  * use this prompt.
  */
@@ -245,7 +246,8 @@ void printNonGitPrompt() {
   printf("%s", defaultPrompt);
 }
 
-/* --------------------------------------------------
+
+/**
  *  When standing in a git repo, use this prompt.
  */
 void printGitPrompt(const struct RepoStatus *repo_status) {
@@ -331,7 +333,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 }
 
 
-/*
+/**
  * Calculate the number of commits ahead and behind the local branch is
  * compared to its upstream branch.
  * @return 0 on success, non-0 on error.
@@ -380,7 +382,7 @@ int calculateAheadBehind(git_repository *repo,
 
 
 
-/* --------------------------------------------------
+/**
  * Helper: substitute
  */
 char* substitute(const char* text, const char* search, const char* replacement) {
