@@ -272,7 +272,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     size_t common_length = strspn(cwd, home);
     sprintf(wd, "~/%s", cwd + common_length);
   }
-  else if (strcmp(wd_style, "relpath") == 0) { //todo when with_root is added, rename this to _no_root
+  else if (strcmp(wd_style, "gitrelpath") == 0) { //todo when with_root is added, rename this to _no_root
     // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, cwd);
     sprintf(wd, "%s", cwd + common_length);
