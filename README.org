@@ -66,6 +66,17 @@ Currently supported special instructions:
 
 Note that upper-case instructions are decorated with Pre- and postfix patterns (see below)
 
+*** Instruction Styles
+Special instructions can be further configured using Styles. 
+
+**** =\pC= Styles
+The part of the prompt which shows the current working directory, is
+governed by the =\pC= Special instruction. To change its style, you
+can set the =GP_GIT_WD_STYLE= to one of styles below.
+
+- If unset or set to =basename=, =\pC= will output the basename of CWD.
+- If set to =cwd=,  output the full path from the user's =$HOME=.
+- If set to =gitrelpath=, output the full path from git-root (exclusive)
 
 *** Patterns
 These are environment variables which override some particular part of
@@ -124,14 +135,6 @@ Though these are all currently used for colours, one can use these for
 arbitrary text.
 
 
-
-*** Styles
-Currently, =\pC= (current working directory) can be further configured
-using the =GP_GIT_WD_STYLE= environment variable.
-
-- If unset or set to =basename=, =\pC= will output the basename of CWD.
-- If set to =cwd=,  output the full path from the user's =$HOME=.
-- If set to =gitrelpath=, output the full path from git-root (exclusive)
 
 ** Dependencies
 - [[https://github.com/libgit2/libgit2][libgit2]]
