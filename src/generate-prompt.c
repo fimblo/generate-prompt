@@ -292,25 +292,27 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // look for and substitute escape codes
-  char repo_temp[256];
-  char branch_temp[256];
-  char cwd_temp[2048];
-  char ab_temp[16]; // (ahead|-behind)
-  char a_temp[4]; // ahead
-  char b_temp[4]; // behind
+  char repo_temp[256]   = { '\0' };
+  char branch_temp[256] = { '\0' };
+  char cwd_temp[2048]   = { '\0' };
+  char ab_temp[16]      = { '\0' }; // (ahead|-behind)
+  char a_temp[4]        = { '\0' }; // ahead
+  char b_temp[4]        = { '\0' }; // behind
 
-  
+
   sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
   sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
   sprintf(cwd_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
-  
+
   if (repo_status->ahead + repo_status->behind != 0)
     sprintf(ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
-  else
-    ab_temp[0] = '\0';
-    
-  sprintf(a_temp, "%d", repo_status->ahead);
-  sprintf(b_temp, "%d", repo_status->behind);
+
+  if (repo_status->ahead != 0)
+    sprintf(a_temp, "%d", repo_status->ahead);
+
+  if (repo_status->behind != 0)
+    sprintf(b_temp, "%d", repo_status->behind);
+
 
 
   const char* searchStrings[] = { "\\pR", "\\pL", "\\pC", "\\pd", "\\pa", "\\pb" };
