@@ -24,9 +24,9 @@ OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 BINS = $(patsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%, $(SRCS))
 
 # Targets
-.PHONY: all build install install-local clean
+.PHONY: all build install install-local clean test
 
-all: build
+all: build test
 
 build: $(BINS)
 
@@ -48,9 +48,12 @@ install-local: $(BINS)
 	@ln -s $(abspath $(BIN_DIR)/generate-prompt) $(LOCAL_INSTALL_DIR)/generate-prompt
 	@echo "Symbolic link created: $(LOCAL_INSTALL_DIR)/generate-prompt -> $(abspath $(BIN_DIR)/generate-prompt)"
 
-
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
+
+
+test:
+	bats test
 
 
 # No arguments, default to build

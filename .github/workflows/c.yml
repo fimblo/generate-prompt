@@ -24,7 +24,7 @@ jobs:
         sudo ./install.sh /usr/local
 
     - name: Run make
-      run: make
+      run: make build
 
     - name: Run tests
-      run: bats test
+      run: make test
