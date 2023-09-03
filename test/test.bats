@@ -26,7 +26,7 @@ setup () {
   unset GP_NO_DATA
   unset GP_DEFAULT_PROMPT
 
-  export GP_GIT_PROMPT='REPO:\pR:BRANCH:\pB:WD:\pC:'
+  export GP_GIT_PROMPT='REPO:\pR:LOCALBRANCH:\pL:WD:\pC:'
 
   # set global git user/email if it is not set
   if ! [ -e ~/.gitconfig ] ; then
@@ -116,10 +116,10 @@ teardown () {
   #   up-to-date (there are no tracked files which are modified.)
   # 
   repo=$(basename $(git rev-parse --show-toplevel))
-  branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
 
-  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:LOCALBRANCH:${UP_TO_DATE}${l_branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
@@ -149,10 +149,10 @@ teardown () {
   #   modified
   # 
   repo=$(basename $(git rev-parse --show-toplevel))
-  branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
 
-  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${MODIFIED}${wd}${RESET}:"
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:LOCALBRANCH:${UP_TO_DATE}${l_branch}${RESET}:WD:${MODIFIED}${wd}${RESET}:"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
@@ -162,27 +162,27 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "changing branch updates prompt" {
+@test "changing localbranch updates prompt" {
   # given we have a git repo
   git init
   touch FOO
   git add FOO
   git commit -m '.'
 
-  # given we change branch
+  # given we change localbranch
   git checkout -b featureBranch
 
   # when we run the prompt
   run -0 $GENERATE_PROMPT
 
   # then we should get a git prompt, where
-  # - the branch name should be featureBranch
+  # - the localbranch name should be featureBranch
 
   repo=$(basename $(git rev-parse --show-toplevel))
-  branch="featureBranch"
+  l_branch="featureBranch"
   wd=$(basename $PWD)
 
-  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:LOCALBRANCH:${UP_TO_DATE}${l_branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
@@ -215,10 +215,10 @@ teardown () {
   # then we should get a git prompt
   # where each of the three fields are up-to-date
   repo=$(basename $(git rev-parse --show-toplevel))
-  branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
 
-  expected_prompt="REPO:${UP_TO_DATE}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  expected_prompt="REPO:${UP_TO_DATE}${repo}${RESET}:LOCALBRANCH:${UP_TO_DATE}${l_branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
@@ -256,10 +256,10 @@ teardown () {
   # then we should get a git prompt
   # where the repo field should be set to MODIFIED
   repo=$(basename $(git rev-parse --show-toplevel))
-  branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
 
-  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:BRANCH:${UP_TO_DATE}${branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:LOCALBRANCH:${UP_TO_DATE}${l_branch}${RESET}:WD:${UP_TO_DATE}${wd}${RESET}:"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 

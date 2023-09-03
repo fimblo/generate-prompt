@@ -64,14 +64,14 @@ overridden as well.
 
 Example:
 #+begin_src bash
-export GP_GIT_PROMPT="[\pR/\pB][\pC]\n$ ";
+export GP_GIT_PROMPT="[\pR/\pL][\pC]\n$ ";
 export GP_UP_TO_DATE="\033[0;32m"
 export GP_MODIFIED="\033[0;33m"
 #+end_src
 
 *** generate-prompt special instructions
 - =\pR= Replaced with the repo name, coloured with state
-- =\pB= Replaced with branch name, coloured with state
+- =\pL= Replaced with local branch name, coloured with state
 - =\pC= Replaced with current working directory*, coloured with state
 - =\pd= Replaced with '(a|b)', where 'a' and 'b' are the local ref's
   number of commits ahead and behind upstream ref, respectively. If

@@ -24,7 +24,7 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 # Special control sequences:
 #   \pd    replaced with diff to upstream ref (ahead, behind)
 #   \pR    replaced with the git repo name, coloured with state
-#   \pB    replaced with the local branch name, coloured with state
+#   \pL    replaced with the local branch name, coloured with state
 #   \pC    replaced with the current working directory(cwd), coloured with state
 #
 # The colour switches between green and yellow, or GP_UP_TO_DATE and
@@ -40,7 +40,7 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 #
 # Note: all terminal escape codes, if used, are preserved.
 unset GP_GIT_PROMPT
-export GP_GIT_PROMPT="[\pR/\pB/\pC]\n$ ";
+export GP_GIT_PROMPT="[\pR/\pL/\pC]\n$ ";
 
 
 unset GP_UP_TO_DATE

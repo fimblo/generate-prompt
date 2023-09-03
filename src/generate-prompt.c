@@ -251,7 +251,7 @@ void printNonGitPrompt() {
 void printGitPrompt(const struct RepoStatus *repo_status) {
 
   // handle environment variables and default values
-  const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pB/\\pC]\n$ ";
+  const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\n$ ";
 
   const char *colour[4];
   colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
@@ -309,7 +309,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     
 
 
-  const char* searchStrings[] = { "\\pR", "\\pB", "\\pC", "\\pd" };
+  const char* searchStrings[] = { "\\pR", "\\pL", "\\pC", "\\pd" };
   const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp, ab_temp};
 
   char* prompt = strdup(undigestedPrompt);
