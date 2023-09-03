@@ -22,10 +22,13 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 # resulting string is sent to stdout.
 #
 # Special control sequences:
-#   \pd    replaced with diff to upstream ref (ahead, behind)
 #   \pR    replaced with the git repo name, coloured with state
 #   \pL    replaced with the local branch name, coloured with state
 #   \pC    replaced with the current working directory(cwd), coloured with state
+#   \pd    replaced with diff to upstream ref (ahead, behind)
+#   \pa    replaced with number of commits local is ahead of upstream
+#   \pb    replaced with number of commits local is behind of upstream
+
 #
 # The colour switches between green and yellow, or GP_UP_TO_DATE and
 # GP_MODIFIED (if these are set in the environment).

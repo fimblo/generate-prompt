@@ -295,7 +295,9 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char repo_temp[256];
   char branch_temp[256];
   char cwd_temp[2048];
-  char ab_temp[16]; // ahead - behind
+  char ab_temp[16]; // (ahead|-behind)
+  char a_temp[4]; // ahead
+  char b_temp[4]; // behind
 
   
   sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
@@ -307,10 +309,12 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   else
     ab_temp[0] = '\0';
     
+  sprintf(a_temp, "%d", repo_status->ahead);
+  sprintf(b_temp, "%d", repo_status->behind);
 
 
-  const char* searchStrings[] = { "\\pR", "\\pL", "\\pC", "\\pd" };
-  const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp, ab_temp};
+  const char* searchStrings[] = { "\\pR", "\\pL", "\\pC", "\\pd", "\\pa", "\\pb" };
+  const char* replaceStrings[] = { repo_temp, branch_temp, cwd_temp, ab_temp, a_temp, b_temp};
 
   char* prompt = strdup(undigestedPrompt);
 

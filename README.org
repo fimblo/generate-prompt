@@ -64,7 +64,7 @@ overridden as well.
 
 Example:
 #+begin_src bash
-export GP_GIT_PROMPT="[\pR/\pL][\pC]\n$ ";
+export GP_GIT_PROMPT="[\pR/\pL][\pC]\n$ "
 export GP_UP_TO_DATE="\033[0;32m"
 export GP_MODIFIED="\033[0;33m"
 #+end_src
@@ -77,6 +77,10 @@ export GP_MODIFIED="\033[0;33m"
   number of commits ahead and behind upstream ref, respectively. If
   these are both zero, the instruction is replaced with the empty
   string.
+- =\pa= Replaced with number of commits local repo is ahead of upstream ref.
+- =\pb= Replaced with number of commits local repo is behind of upstream ref.
+  
+
 ** Dependencies
 - [[https://github.com/libgit2/libgit2][libgit2]]
 - [[https://github.com/bats-core/bats-core][bats-core]]
