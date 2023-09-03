@@ -293,16 +293,17 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // prepare all substitutions
-  char repo_temp[256]   = { '\0' };
-  char branch_temp[256] = { '\0' };
-  char cwd_temp[2048]   = { '\0' };
-  char ab_temp[16]      = { '\0' }; // (ahead|-behind)
-  char a_temp[4]        = { '\0' }; // ahead
-  char b_temp[4]        = { '\0' }; // behind
+  char repo_c_temp[256]   = { '\0' };
+  char branch_c_temp[256] = { '\0' };
+  char cwd_c_temp[2048]   = { '\0' };
 
-  sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
-  sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
-  sprintf(cwd_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
+  char ab_temp[16]        = { '\0' }; // (ahead|-behind)
+  char a_temp[4]          = { '\0' }; // ahead
+  char b_temp[4]          = { '\0' }; // behind
+
+  sprintf(repo_c_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
+  sprintf(branch_c_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
+  sprintf(cwd_c_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
 
   if (repo_status->ahead + repo_status->behind != 0)
     sprintf(ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
@@ -315,8 +316,16 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // apply all instructions found
-  const char* instructions[] = { "\\pR", "\\pL", "\\pC", "\\pd", "\\pa", "\\pb" };
-  const char* replacements[] = { repo_temp, branch_temp, cwd_temp, ab_temp, a_temp, b_temp};
+  const char* instructions[] =
+    { "\\pr",                  "\\pl",                   "\\pc",
+      "\\pR",                  "\\pL",                   "\\pC",
+      "\\pd",                  "\\pa",                   "\\pb"
+    };
+  const char* replacements[] =
+    { repo_status->repo_name,  repo_status->branch_name, wd,
+      repo_c_temp,             branch_c_temp,            cwd_c_temp,
+      ab_temp,                 a_temp,                   b_temp
+    };
 
   char* prompt = strdup(undigestedPrompt);
 

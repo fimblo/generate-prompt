@@ -59,9 +59,9 @@ For example, =\pC= is replaced with the name of the current working
 directory you're standing in.
 
 Currently supported Instructions:
-- =\pR= replaced with the git repo name, coloured with state                    
-- =\pL= replaced with the local branch name, coloured with state                
-- =\pC= replaced with the current working directory(cwd), coloured with state   
+- =\pR= replaced with the git repo name (=\pr= for undecorated)
+- =\pL= replaced with the local branch name (=\pl= for undecorated)
+- =\pC= replaced with the current working directory(cwd) (=\pc= for undecorated)
 - =\pa= replaced with number of commits local is ahead of upstream              
 - =\pb= replaced with number of commits local is behind of upstream
 - =\pd= replaced with diff to upstream ref (ahead and behind, combined)
