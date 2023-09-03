@@ -14,25 +14,34 @@ setup () {
   RUN_TMPDIR=$( mktemp -d "$BATS_TEST_TMPDIR/tmp.XXXXXX" )
   cd $RUN_TMPDIR
 
-  # colours used by generate-prompt
-  UP_TO_DATE="\033[0;32m"
-  MODIFIED="\033[0;33m"
-  NO_DATA="\033[0;37m"
-  RESET="\033[0m"
 
-  # remove all relevant overrides
+  # Revert most environment variables to default state
+  # pre- and postfix patterns
   unset GP_UP_TO_DATE
   unset GP_MODIFIED
   unset GP_NO_DATA
+  unset GP_RESET
+  
+  # prompt patterns
   unset GP_DEFAULT_PROMPT
-
   export GP_GIT_PROMPT='REPO:\pR:LOCALBRANCH:\pL:WD:\pC:'
 
-  # set global git user/email if it is not set
+  # styles
+  unset GP_GIT_WD_STYLE
+
+
+  # Set global git user/email if it is not set
   if ! [ -e ~/.gitconfig ] ; then
     git config --global user.email "my@test.com"
     git config --global user.name "Test Person"
   fi
+
+
+  # colour codes used by all tests
+  UP_TO_DATE="\033[0;32m"
+  MODIFIED="\033[0;33m"
+  NO_DATA="\033[0;37m"
+  RESET="\033[0m"
 }
 
 # run after each test
