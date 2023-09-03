@@ -257,7 +257,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   colour[ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m";  // UP_TO_DATE - default green
   colour[ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m";  // MODIFIED   - default yellow
   colour[ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m";  // NO_DATA: default light grey
-  colour[ RESET       ] = "\033[0m"; // RESET      - RESET to default
+  colour[ RESET       ] = getenv("GP_RESET")      ?: "\033[0m";    // RESET      - RESET to default
 
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
 
