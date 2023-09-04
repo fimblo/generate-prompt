@@ -289,7 +289,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",
     [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"
   };
-  const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
+  const char *wd_style = getenv("GP_WD_STYLE") ?: "basename";
   const char *conflict_style = getenv("GP_CONFLICT_STYLE") ?: "(conflict: %d)";
 
 
@@ -297,26 +297,30 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char wd[2048]; 
   char full_path[2048];
   getcwd(full_path, sizeof(full_path));
-  if (strcmp(wd_style, "cwd") == 0) {                 // show the entire path, from $HOME
+  if (strcmp(wd_style, "basename") == 0) {                  // show basename
+    sprintf(wd, "%s", basename(full_path));
+  }
+  else if (strcmp(wd_style, "cwd") == 0) {                  // show the entire path, from $HOME
     const char * home = getenv("HOME") ?: "";
     size_t common_length = strspn(full_path, home);
     sprintf(wd, "~/%s", full_path + common_length);
   }
-  else if (strcmp(wd_style, "gitrelpath") == 0) {     // show the entire path, from git-root (exclusive)
+  else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, full_path);
     sprintf(wd, "%s", full_path + common_length);
     if (strlen(wd) == 0) {
-      sprintf(wd, "//");
+      sprintf(wd, "                                         //");
     }
   }
-  /*
-  else if (strcmp(wd_style, "relpath_with_root") == 0) {
-    // show the entire path, from git-root (inclusive)
-    size_t common_length = strspn(repo_status->repo_path, full_path);
+  else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) { // show the entire path, from git-root (inclusive)
+    size_t common_length = strspn(dirname((char *) repo_status->repo_path), full_path) + 1;
     sprintf(wd, "%s", full_path + common_length);
-    }*/
-  else {                                              // basename - show current directory only
-    sprintf(wd, "%s", basename(full_path));
+  }
+  else {
+    // if GP_GIT_WD_STYLE is set, but doesn't match any of the above
+    // conditions, assume it can be safely added to the prompt. if it
+    // isn't set, run with the default value of "\W" (basename)
+    sprintf(wd, "%s", wd_style);
   }
 
 
@@ -324,9 +328,9 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char repo_temp[256]   = { '\0' };
   char branch_temp[256] = { '\0' };
   char cwd_temp[2048]   = { '\0' };
-  sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
+  sprintf(repo_temp,   "%s%s%s", colour[repo_status->repo],  repo_status->repo_name,   colour[RESET]);
   sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
-  sprintf(cwd_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
+  sprintf(cwd_temp,    "%s%s%s", colour[repo_status->wdir],  wd,                       colour[RESET]);
 
   // prep for conflicts
   char conflict_temp[32]  = { '\0' };
@@ -354,7 +358,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     };
   const char* replacements[] =
     { repo_status->repo_name,  repo_status->branch_name, wd,
-      repo_temp,             branch_temp,            cwd_temp,
+      repo_temp,               branch_temp,              cwd_temp,
       ab_temp,                 a_temp,                   b_temp,
       conflict_temp
     };

@@ -75,12 +75,16 @@ Instructions can be further configured using Styles.
 **** =\pC= Styles
 The part of the prompt which shows the current working directory, is
 governed by the =\pC= Instruction. To change its style, you
-can set the environment variable =GP_GIT_WD_STYLE= to one of styles
+can set the environment variable =GP_WD_STYLE= to one of styles
 below.
 
 - If unset or set to =basename=, =\pC= will output the basename of CWD.
-- If set to =cwd=,  output the full path from the user's =$HOME=.
-- If set to =gitrelpath=, output the full path from git-root (exclusive)
+- If set to =cwd=, output the full path from the user's =$HOME=.
+- If set to =gitrelpath_exclusive=, output the full path from
+  git-root, excluding the project name
+- If set to =gitrelpath_inclusive=, output the full path from
+  git-root, including the project name
+  
 
 *** Patterns
 These are environment variables which override some particular part of
