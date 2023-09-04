@@ -145,7 +145,7 @@ int main() {
   // If there is no upstream ref, this is probably a stand-alone branch
   git_reference *upstream_ref = NULL;
   const git_oid *upstream_oid;
-  if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name)) {
+  if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name) != 0) {
     git_reference_free(upstream_ref);
     repo_status.repo = NO_DATA;
   }
