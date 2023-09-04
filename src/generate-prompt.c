@@ -13,8 +13,9 @@
 enum states {
   UP_TO_DATE  = 0,
   MODIFIED    = 1,
-  NO_DATA     = 2,
-  RESET       = 3,
+  CONFLICT    = 2,
+  NO_DATA     = 3,
+  RESET       = 4,
 };
 
 // used to pass repo info around between functions
@@ -98,6 +99,7 @@ int main() {
   git_libgit2_init();
 
   struct RepoStatus repo_status;
+
   repo_status.repo           = UP_TO_DATE;
   repo_status.index          = UP_TO_DATE;
   repo_status.wdir           = UP_TO_DATE;
@@ -163,7 +165,6 @@ int main() {
       if (entry->status == GIT_STATUS_CURRENT)         continue;
       if (entry->status & GIT_STATUS_CONFLICTED)       repo_status.conflict_count++;
 
-
       if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status.index = MODIFIED;
       if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status.index = MODIFIED;
       if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status.index = MODIFIED;
@@ -176,6 +177,7 @@ int main() {
       if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status.wdir = MODIFIED;
     }
   }
+
 
   // Strange bug. When a repo is in conflict, then the function
   // git_reference_lookup fails to populate upstream_ref, resulting in
@@ -210,7 +212,6 @@ int main() {
     // Since we're in conflict, mark the repo state accordingly.
     repo_status.repo = NO_DATA;
   }
-
 
 
   // print the git prompt now that we have the info
@@ -280,10 +281,11 @@ void printNonGitPrompt() {
 void printGitPrompt(const struct RepoStatus *repo_status) {
 
   // handle environment variables and default values
-  const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\n$ ";
-  const char *colour[4] = {
+  const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\\pk\n$ ";
+  const char *colour[5] = {
     [ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m",  // UP_TO_DATE - default green
     [ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m",  // MODIFIED   - default yellow
+    [ CONFLICT    ] = getenv("GP_CONFLICT")   ?: "\033[0;31m",  // CONFLICT   - default red
     [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",  // NO_DATA: default light grey
     [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"      // RESET      - RESET to default
   };
@@ -323,16 +325,20 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char repo_c_temp[256]   = { '\0' };
   char branch_c_temp[256] = { '\0' };
   char cwd_c_temp[2048]   = { '\0' };
-
-  char ab_temp[16]        = { '\0' }; // (ahead|-behind)
-  char a_temp[4]          = { '\0' }; // ahead
-  char b_temp[4]          = { '\0' }; // behind
-
   sprintf(repo_c_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
   sprintf(branch_c_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
   sprintf(cwd_c_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
 
-  if (repo_status->ahead + repo_status->behind != 0)
+  // show if there a conflict
+  char conflict_temp[32]  = { '\0' };
+  if (repo_status->conflict_count > 0)
+    sprintf(conflict_temp, "(conflict: %d)", repo_status->conflict_count);
+
+  // ahead/behind upstream-ref
+  char ab_temp[16]        = { '\0' };
+  char a_temp[4]          = { '\0' };
+  char b_temp[4]          = { '\0' };
+  if (repo_status->ahead + repo_status->behind > 0)
     sprintf(ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
 
   if (repo_status->ahead != 0)
@@ -346,12 +352,14 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   const char* instructions[] =
     { "\\pr",                  "\\pl",                   "\\pc",
       "\\pR",                  "\\pL",                   "\\pC",
-      "\\pd",                  "\\pa",                   "\\pb"
+      "\\pd",                  "\\pa",                   "\\pb",
+      "\\pk"
     };
   const char* replacements[] =
     { repo_status->repo_name,  repo_status->branch_name, wd,
       repo_c_temp,             branch_c_temp,            cwd_c_temp,
-      ab_temp,                 a_temp,                   b_temp
+      ab_temp,                 a_temp,                   b_temp,
+      conflict_temp
     };
 
   char* prompt = strdup(undigestedPrompt);
