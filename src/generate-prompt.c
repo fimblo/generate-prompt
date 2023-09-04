@@ -290,6 +290,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"
   };
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
+  const char *conflict_style = getenv("GP_CONFLICT_STYLE") ?: "(conflict: %d)";
 
 
   // handle working directory (wd) style
@@ -330,7 +331,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   // prep for conflicts
   char conflict_temp[32]  = { '\0' };
   if (repo_status->conflict_count > 0)
-    sprintf(conflict_temp, "(conflict: %d)", repo_status->conflict_count);
+    sprintf(conflict_temp, conflict_style, repo_status->conflict_count);
 
   // prep for ahead/behind upstream-ref
   char ab_temp[16]        = { '\0' };
