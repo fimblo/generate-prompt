@@ -333,9 +333,12 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   sprintf(cwd_temp,    "%s%s%s", colour[repo_status->wdir],  wd,                       colour[RESET]);
 
   // prep for conflicts
-  char conflict_temp[32]  = { '\0' };
-  if (repo_status->conflict_count > 0)
+  char conflict_temp[32]         = { '\0' };
+  char conflict_colour_temp[32]  = { '\0' };
+  if (repo_status->conflict_count > 0) {
     sprintf(conflict_temp, conflict_style, repo_status->conflict_count);
+    sprintf(conflict_colour_temp, "%s%s%s", colour[CONFLICT], conflict_temp, colour[RESET]);
+  }
 
   // prep for ahead/behind upstream-ref
   char ab_temp[16]        = { '\0' };
@@ -354,13 +357,13 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     { "\\pr",                  "\\pl",                   "\\pc",
       "\\pR",                  "\\pL",                   "\\pC",
       "\\pd",                  "\\pa",                   "\\pb",
-      "\\pk"
+      "\\pk",                  "\\pK"
     };
   const char* replacements[] =
     { repo_status->repo_name,  repo_status->branch_name, wd,
       repo_temp,               branch_temp,              cwd_temp,
       ab_temp,                 a_temp,                   b_temp,
-      conflict_temp
+      conflict_temp,           conflict_colour_temp
     };
 
   char* prompt = strdup(undigestedPrompt);
