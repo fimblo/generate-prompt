@@ -280,70 +280,66 @@ void printNonGitPrompt() {
  */
 void printGitPrompt(const struct RepoStatus *repo_status) {
 
-  // handle environment variables and default values
+  // environment, else default values
   const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\\pk\n$ ";
   const char *colour[5] = {
-    [ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m",  // UP_TO_DATE - default green
-    [ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m",  // MODIFIED   - default yellow
-    [ CONFLICT    ] = getenv("GP_CONFLICT")   ?: "\033[0;31m",  // CONFLICT   - default red
-    [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",  // NO_DATA: default light grey
-    [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"      // RESET      - RESET to default
+    [ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m",
+    [ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m",
+    [ CONFLICT    ] = getenv("GP_CONFLICT")   ?: "\033[0;31m",
+    [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",
+    [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"
   };
   const char *wd_style = getenv("GP_GIT_WD_STYLE") ?: "basename";
 
 
-  // handle working directory (wd) field
-  char full_path[2048]; // for output from getcwd
-  char wd[2048];  // for storing the preferred working directory string style
+  // handle working directory (wd) style
+  char wd[2048]; 
+  char full_path[2048];
   getcwd(full_path, sizeof(full_path));
-  if (strcmp(wd_style, "cwd") == 0) {
-    // show the entire path, from $HOME
+  if (strcmp(wd_style, "cwd") == 0) {                 // show the entire path, from $HOME
     const char * home = getenv("HOME") ?: "";
     size_t common_length = strspn(full_path, home);
     sprintf(wd, "~/%s", full_path + common_length);
   }
-  else if (strcmp(wd_style, "gitrelpath") == 0) { //todo when with_root is added, rename this to _no_root
-    // show the entire path, from git-root (exclusive)
+  else if (strcmp(wd_style, "gitrelpath") == 0) {     // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, full_path);
     sprintf(wd, "%s", full_path + common_length);
     if (strlen(wd) == 0) {
       sprintf(wd, "//");
     }
   }
-  /* else if (strcmp(wd_style, "relpath_with_root") == 0) { */
-  /*   // show the entire path, from git-root (inclusive) */
-  /*   size_t common_length = strspn(repo_status->repo_path, full_path); */
-  /*   sprintf(wd, "%s", full_path + common_length); */
-  /* } */
-  else {
-    // basename - show current directory only
+  /*
+  else if (strcmp(wd_style, "relpath_with_root") == 0) {
+    // show the entire path, from git-root (inclusive)
+    size_t common_length = strspn(repo_status->repo_path, full_path);
+    sprintf(wd, "%s", full_path + common_length);
+    }*/
+  else {                                              // basename - show current directory only
     sprintf(wd, "%s", basename(full_path));
   }
 
 
-  // prepare all substitutions
-  char repo_c_temp[256]   = { '\0' };
-  char branch_c_temp[256] = { '\0' };
-  char cwd_c_temp[2048]   = { '\0' };
-  sprintf(repo_c_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
-  sprintf(branch_c_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
-  sprintf(cwd_c_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
+  // substitute base instructions
+  char repo_temp[256]   = { '\0' };
+  char branch_temp[256] = { '\0' };
+  char cwd_temp[2048]   = { '\0' };
+  sprintf(repo_temp, "%s%s%s", colour[repo_status->repo], repo_status->repo_name, colour[RESET]);
+  sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
+  sprintf(cwd_temp, "%s%s%s", colour[repo_status->wdir], wd, colour[RESET]);
 
-  // show if there a conflict
+  // prep for conflicts
   char conflict_temp[32]  = { '\0' };
   if (repo_status->conflict_count > 0)
     sprintf(conflict_temp, "(conflict: %d)", repo_status->conflict_count);
 
-  // ahead/behind upstream-ref
+  // prep for ahead/behind upstream-ref
   char ab_temp[16]        = { '\0' };
   char a_temp[4]          = { '\0' };
   char b_temp[4]          = { '\0' };
   if (repo_status->ahead + repo_status->behind > 0)
     sprintf(ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
-
   if (repo_status->ahead != 0)
     sprintf(a_temp, "%d", repo_status->ahead);
-
   if (repo_status->behind != 0)
     sprintf(b_temp, "%d", repo_status->behind);
 
@@ -357,7 +353,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     };
   const char* replacements[] =
     { repo_status->repo_name,  repo_status->branch_name, wd,
-      repo_c_temp,             branch_c_temp,            cwd_c_temp,
+      repo_temp,             branch_temp,            cwd_temp,
       ab_temp,                 a_temp,                   b_temp,
       conflict_temp
     };
