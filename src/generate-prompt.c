@@ -27,6 +27,7 @@ struct RepoStatus {
   int wdir;
   int ahead;
   int behind;
+  int conflict_count;
 };
 
 // exit codes
@@ -97,11 +98,12 @@ int main() {
   git_libgit2_init();
 
   struct RepoStatus repo_status;
-  repo_status.repo        = UP_TO_DATE;
-  repo_status.index       = UP_TO_DATE;
-  repo_status.wdir        = UP_TO_DATE;
-  repo_status.ahead       = 0;
-  repo_status.behind      = 0;
+  repo_status.repo           = UP_TO_DATE;
+  repo_status.index          = UP_TO_DATE;
+  repo_status.wdir           = UP_TO_DATE;
+  repo_status.ahead          = 0;
+  repo_status.behind         = 0;
+  repo_status.conflict_count = 0;
 
   // get path to git repo at '.' else print default prompt
   const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
@@ -138,29 +140,6 @@ int main() {
   char full_local_branch_name[128];
   sprintf(full_local_branch_name, "refs/heads/%s",  repo_status.branch_name);
 
-
-  char full_remote_branch_name[128];
-  sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
-
-  // If there is no upstream ref, this is probably a stand-alone branch
-  git_reference *upstream_ref = NULL;
-  const git_oid *upstream_oid;
-  if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name) != 0) {
-    git_reference_free(upstream_ref);
-    repo_status.repo = NO_DATA;
-  }
-  else {
-    upstream_oid = git_reference_target(upstream_ref);
-    calculateAheadBehind(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
-  }
-  
-  // check if local and remote are the same
-  if (repo_status.repo == UP_TO_DATE) {
-    if (git_oid_cmp(head_oid, upstream_oid) != 0)
-      repo_status.repo = MODIFIED;
-  }
-
-
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
@@ -168,7 +147,6 @@ int main() {
 
   git_status_list *status_list = NULL;
   if (git_status_list_new(&status_list, repo, &opts) != 0) {
-    git_reference_free(upstream_ref);
     git_reference_free(head_ref);
     git_repository_free(repo);
     free((void *) git_repository_path);
@@ -183,6 +161,8 @@ int main() {
     for (int i = 0; i < status_count; i++) {
       const git_status_entry *entry = git_status_byindex(status_list, i);
       if (entry->status == GIT_STATUS_CURRENT)         continue;
+      if (entry->status & GIT_STATUS_CONFLICTED)       repo_status.conflict_count++;
+
 
       if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status.index = MODIFIED;
       if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status.index = MODIFIED;
@@ -197,12 +177,47 @@ int main() {
     }
   }
 
+  // Strange bug. When a repo is in conflict, then the function
+  // git_reference_lookup fails to populate upstream_ref, resulting in
+  // a segfault inside of the compareAheadBehind function. I think
+  // it's something something the repo is in an inconsistent state,
+  // and there's no ref to compare.
+  if (repo_status.conflict_count == 0) {
+    char full_remote_branch_name[128];
+    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
+
+    // If there is no upstream ref, this is probably a stand-alone branch
+    git_reference *upstream_ref = NULL;
+    const git_oid *upstream_oid;
+    if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name) != 0) {
+      git_reference_free(upstream_ref);
+      repo_status.repo = NO_DATA;
+    }
+    else {
+      upstream_oid = git_reference_target(upstream_ref);
+      calculateAheadBehind(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
+    }
+
+    // check if local and remote are the same
+    if (repo_status.repo == UP_TO_DATE) {
+      if (git_oid_cmp(head_oid, upstream_oid) != 0)
+        repo_status.repo = MODIFIED;
+    }
+
+    git_reference_free(upstream_ref);
+  }
+  else {
+    // Since we're in conflict, mark the repo state accordingly.
+    repo_status.repo = NO_DATA;
+  }
+
+
+
   // print the git prompt now that we have the info
   printGitPrompt(&repo_status);
 
   // clean up before we end
   git_status_list_free(status_list);
-  git_reference_free(upstream_ref);
   git_reference_free(head_ref);
   git_repository_free(repo);
   free((void *) git_repository_path);
@@ -382,7 +397,7 @@ int calculateAheadBehind(git_repository *repo,
 
   // count number of commits behind
   git_revwalk_reset(walker);
-  if (git_revwalk_push(walker, upstream_oid) != 0 || // set where I want to start          
+  if (git_revwalk_push(walker, upstream_oid) != 0 || // set where I want to start
       git_revwalk_hide(walker, local_oid)    != 0) { // set where the walk ends (exclusive)
     git_revwalk_free(walker);
     return -3;
