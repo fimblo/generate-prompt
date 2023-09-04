@@ -66,6 +66,15 @@ setup () {
   MODIFIED="\033[0;33m"
   NO_DATA="\033[0;37m"
   RESET="\033[0m"
+
+  # exit codes
+  EXIT_GIT_PROMPT=0
+  EXIT_DEFAULT_PROMPT=1
+  EXIT_NO_LOCAL_REF=2
+
+  EXIT_FAIL_GIT_STATUS=255
+  EXIT_FAIL_REPO_OBJ=254
+
 }
 
 # run after each test
@@ -80,7 +89,7 @@ teardown () {
   # given we stand in a directory which isn't a git repo
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_DEFAULT_PROMPT} $GENERATE_PROMPT
 
   # then we should get the default prompt
   [ "$output" =  "\\W $ " ]
@@ -94,7 +103,7 @@ teardown () {
   export GP_DEFAULT_PROMPT="SOME STRING"
   
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_DEFAULT_PROMPT} $GENERATE_PROMPT
 
   # then it should return what we set to be the prompt
   [ "$output" = "SOME STRING" ]
@@ -107,7 +116,7 @@ teardown () {
   git init
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_NO_LOCAL_REF} $GENERATE_PROMPT
 
   # then it should behave as in a normal non-git repo
   [ "$output" =  "\\W $ " ]
@@ -122,7 +131,7 @@ teardown () {
   git add FOO
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_NO_LOCAL_REF} $GENERATE_PROMPT
 
   # then we should get the default non-git prompt
   [ "$output" =  "\\W $ " ]
@@ -135,7 +144,7 @@ teardown () {
   helper__commit_to_new_repo "newfile" "some text"
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
 
   # then we should get a git prompt, where
   # - the repo name should be the git project name and upstream ref is
@@ -165,7 +174,7 @@ teardown () {
   echo > newfile
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
 
   # then we should get a git prompt, where
   # - the repo name should be the git project name and upstream ref is
@@ -197,7 +206,7 @@ teardown () {
   git checkout -b featureBranch
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
 
   # then we should get a git prompt, where
   # - the localbranch name should be featureBranch
@@ -231,7 +240,7 @@ teardown () {
 
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
 
   # then we should get a git prompt
   # where each of the three fields are up-to-date
@@ -269,7 +278,7 @@ teardown () {
   git commit -m 'update the file'
 
   # when we run the prompt
-  run -0 $GENERATE_PROMPT
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
 
   # then we should get a git prompt
   # where the repo field should be set to MODIFIED

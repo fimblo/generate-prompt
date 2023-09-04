@@ -29,6 +29,18 @@ struct RepoStatus {
   int behind;
 };
 
+// exit codes
+enum exit_code {
+  // success codes
+  EXIT_GIT_PROMPT        =  0,
+  EXIT_DEFAULT_PROMPT    =  1,
+  EXIT_ABSENT_LOCAL_REF  =  2,
+
+  // failure codes
+  EXIT_FAIL_GIT_STATUS   = -1,
+  EXIT_FAIL_REPO_OBJ     = -2,
+};
+
 
 /** --------------------------------------------------
  * Declarations
@@ -96,7 +108,7 @@ int main() {
   if (strlen(git_repository_path) == 0) {
     free((void *) git_repository_path);
     printNonGitPrompt();
-    return 0;
+    return EXIT_DEFAULT_PROMPT   ;
   }
   repo_status.repo_path   = git_repository_path;
 
@@ -105,7 +117,7 @@ int main() {
   if (git_repository_open(&repo, git_repository_path) != 0) {
     free((void *) git_repository_path);
     printNonGitPrompt();
-    return 0;
+    return EXIT_FAIL_REPO_OBJ;
   }
 
   // if we can't get ref to repo, it means we haven't committed anything yet.
@@ -116,7 +128,7 @@ int main() {
     free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
-    return 0;
+    return EXIT_ABSENT_LOCAL_REF;
   }
   head_oid = git_reference_target(head_ref);
 
@@ -162,7 +174,7 @@ int main() {
     free((void *) git_repository_path);
     git_libgit2_shutdown();
     printNonGitPrompt();
-    return 0;
+    return EXIT_FAIL_GIT_STATUS;
   }
 
   // check index and wt for diffs
@@ -196,7 +208,7 @@ int main() {
   free((void *) git_repository_path);
   git_libgit2_shutdown();
 
-  return 0;
+  return EXIT_GIT_PROMPT;
 }
 
 
