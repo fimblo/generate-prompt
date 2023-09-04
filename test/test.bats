@@ -5,6 +5,30 @@ bats_require_minimum_version 1.5.0
 # cd path/to/project/root
 # bats test/test.bats
 
+
+helper__init_repo() {
+  git init
+}
+
+helper__add_a_file() {
+  file_to_commit="$1"
+  content_to_commit="$2"
+
+  helper__init_repo
+  echo "$content_to_commit" > $file_to_commit
+  git add $file_to_commit
+}
+
+helper__commit_to_new_repo() {
+  file_to_commit="$1"
+  content_to_commit="$2"
+
+  helper__add_a_file "$file_to_commit" "$content_to_commit"
+  git commit -m 'Initial commit'
+}
+
+
+
 # Binary to test
 GENERATE_PROMPT="$BATS_TEST_DIRNAME/../bin/generate-prompt"
 
@@ -108,10 +132,7 @@ teardown () {
 # --------------------------------------------------
 @test "committing in empty git repo updates prompt" {
   # given we create a repo and commit a file
-  git init          >&2
-  touch FOO         >&2
-  git add FOO       >&2
-  git commit -m '.' >&2
+  helper__commit_to_new_repo "newfile" "some text"
 
   # when we run the prompt
   run -0 $GENERATE_PROMPT
@@ -140,11 +161,8 @@ teardown () {
 # --------------------------------------------------
 @test "modifying tracked file updates prompt" {
   # given we modify a tracked file
-  git init
-  touch FOO
-  git add FOO
-  git commit -m '.'
-  echo > FOO
+  helper__commit_to_new_repo "newfile" "some text"
+  echo > newfile
 
   # when we run the prompt
   run -0 $GENERATE_PROMPT
@@ -173,10 +191,7 @@ teardown () {
 # --------------------------------------------------
 @test "changing localbranch updates prompt" {
   # given we have a git repo
-  git init
-  touch FOO
-  git add FOO
-  git commit -m '.'
+  helper__commit_to_new_repo "newfile" "some text"
 
   # given we change localbranch
   git checkout -b featureBranch
@@ -205,10 +220,7 @@ teardown () {
   # given we have a git repo
   mkdir myRepo
   cd myRepo
-  git init
-  touch FOO
-  git add FOO
-  git commit -m 'Initial commit'
+  helper__commit_to_new_repo "newfile" "some text"
   cd -
 
   # given we clone it
@@ -241,10 +253,7 @@ teardown () {
   # given we have a git repo
   mkdir myRepo
   cd myRepo
-  git init
-  touch FOO
-  git add FOO
-  git commit -m 'Initial commit'
+  helper__commit_to_new_repo "newfile" "some text"
   cd -
 
   # given we clone it
@@ -255,8 +264,8 @@ teardown () {
 
 
   # given we commit a change
-  echo > FOO
-  git add FOO
+  echo > newfile
+  git add newfile
   git commit -m 'update the file'
 
   # when we run the prompt
