@@ -76,9 +76,9 @@ const char* findGitRepositoryPath(const char *path);
 
 
 /**
-  Returns how far ahead/behind local repo is when compared to upstream
+  Returns local/upstream commit divergence
  */
-int calculateAheadBehind(git_repository *repo,
+int calculateDivergence(git_repository *repo,
                          const git_oid *local_oid,
                          const git_oid *upstream_oid,
                          int *ahead,
@@ -181,7 +181,7 @@ int main() {
 
   // Strange bug. When a repo is in conflict, then the function
   // git_reference_lookup fails to populate upstream_ref, resulting in
-  // a segfault inside of the compareAheadBehind function. I think
+  // a segfault inside of the compareDivergence function. I think
   // it's something something the repo is in an inconsistent state,
   // and there's no ref to compare.
   if (repo_status.conflict_count == 0) {
@@ -197,7 +197,7 @@ int main() {
     }
     else {
       upstream_oid = git_reference_target(upstream_ref);
-      calculateAheadBehind(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
+      calculateDivergence(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
     }
 
     // check if local and remote are the same
@@ -340,16 +340,16 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(conflict_colour_temp, "%s%s%s", colour[CONFLICT], conflict_temp, colour[RESET]);
   }
 
-  // prep for ahead/behind upstream-ref
-  char ab_temp[16]        = { '\0' };
-  char a_temp[4]          = { '\0' };
-  char b_temp[4]          = { '\0' };
+  // prep for commit divergence 
+  char divergence_ab_temp[16]        = { '\0' };
+  char divergence_a_temp[4]          = { '\0' };
+  char divergence_b_temp[4]          = { '\0' };
   if (repo_status->ahead + repo_status->behind > 0)
-    sprintf(ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
+    sprintf(divergence_ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
   if (repo_status->ahead != 0)
-    sprintf(a_temp, "%d", repo_status->ahead);
+    sprintf(divergence_a_temp, "%d", repo_status->ahead);
   if (repo_status->behind != 0)
-    sprintf(b_temp, "%d", repo_status->behind);
+    sprintf(divergence_b_temp, "%d", repo_status->behind);
 
 
   // apply all instructions found
@@ -362,7 +362,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   const char* replacements[] =
     { repo_status->repo_name,  repo_status->branch_name, wd,
       repo_temp,               branch_temp,              cwd_temp,
-      ab_temp,                 a_temp,                   b_temp,
+      divergence_ab_temp,      divergence_a_temp,        divergence_b_temp,
       conflict_temp,           conflict_colour_temp
     };
 
@@ -378,11 +378,10 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
 /**
- * Calculate the number of commits ahead and behind the local branch is
- * compared to its upstream branch.
+ * Returns local/upstream commit divergence
  * @return 0 on success, non-0 on error.
  */
-int calculateAheadBehind(git_repository *repo,
+int calculateDivergence(git_repository *repo,
                          const git_oid *local_oid,
                          const git_oid *upstream_oid,
                          int *ahead,
