@@ -65,6 +65,7 @@ Currently supported Instructions:
 - =\pa= replaced with number of commits local is ahead of upstream              
 - =\pb= replaced with number of commits local is behind of upstream
 - =\pd= replaced with combination of =\pa= and =\pb=. "=(a:-b)="
+- =\pK= replaced with warning about conflicts in git repo, if there are any. (=\pk= for undecorated)
 
 Note that upper-case Instructions are decorated with Pre- and postfix
 patterns (see below)
