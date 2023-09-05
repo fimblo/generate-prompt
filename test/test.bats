@@ -293,3 +293,28 @@ teardown () {
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
 }
+
+@test "a conflict should update the prompt" {
+  skip
+}
+@test "local/upstream divergence (ahead) updates prompt" {
+  skip
+}
+@test "local/upstream divergence (behind) updates prompt" {
+  skip
+}
+@test "local/upstream divergence (both ahead and behind) updates prompt" {
+  skip
+}
+@test "wd style: basename" {
+  skip
+}
+@test "wd style: cwd" {
+  skip
+}
+@test "wd style: gitrelpath_exclusive" {
+  skip
+}
+@test "wd style: gitrelpath_inclusive" {
+  skip
+}
