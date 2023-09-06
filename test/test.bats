@@ -295,15 +295,19 @@ teardown () {
 }
 
 @test "a conflict should update the prompt" {
+  # will write later
   skip
 }
 @test "local/upstream divergence (ahead) updates prompt" {
+  # will write later
   skip
 }
 @test "local/upstream divergence (behind) updates prompt" {
+  # will write later
   skip
 }
 @test "local/upstream divergence (both ahead and behind) updates prompt" {
+  # will write later
   skip
 }
 # --------------------------------------------------
@@ -332,12 +336,19 @@ teardown () {
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
 }
-@test "wd style: cwd" {
+@test "wd style: cwd inside of \$HOME" {
+  # will write later
+  skip
+}
+@test "wd style: cwd outside of \$HOME" {
+  # will write later
   skip
 }
 @test "wd style: gitrelpath_exclusive" {
+  # will write later
   skip
 }
 @test "wd style: gitrelpath_inclusive" {
+  # will write later
   skip
 }
