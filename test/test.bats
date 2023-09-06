@@ -45,7 +45,7 @@ setup () {
   unset GP_MODIFIED
   unset GP_NO_DATA
   unset GP_RESET
-  
+
   # prompt patterns
   unset GP_DEFAULT_PROMPT
   export GP_GIT_PROMPT='REPO:\pR:LOCALBRANCH:\pL:WD:\pC:'
@@ -79,7 +79,7 @@ setup () {
 
 # run after each test
 teardown () {
- rm -rf $RUN_TMPDIR
+  rm -rf $RUN_TMPDIR
 }
 
 
@@ -101,7 +101,7 @@ teardown () {
 @test "override default prompt with GP_DEFAULT_PROMPT" {
   # given we set a envvar to override the default prompt
   export GP_DEFAULT_PROMPT="SOME STRING"
-  
+
   # when we run the prompt
   run -${EXIT_DEFAULT_PROMPT} $GENERATE_PROMPT
 
@@ -153,7 +153,7 @@ teardown () {
   #   status is up-to-date (all added changes are committed)
   # - the working directory should be the folder name and status is
   #   up-to-date (there are no tracked files which are modified.)
-  # 
+  #
   repo=$(basename $(git rev-parse --show-toplevel))
   l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
@@ -183,7 +183,7 @@ teardown () {
   #   status is up-to-date (all added changes are committed)
   # - the working directory should be the folder name and status is
   #   modified
-  # 
+  #
   repo=$(basename $(git rev-parse --show-toplevel))
   l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
   wd=$(basename $PWD)
@@ -306,8 +306,31 @@ teardown () {
 @test "local/upstream divergence (both ahead and behind) updates prompt" {
   skip
 }
-@test "wd style: basename" {
-  skip
+# --------------------------------------------------
+@test "wd style:basename shows only directory name" {
+  # set things up
+  helper__commit_to_new_repo "newfile" "some text"
+  export GP_GIT_PROMPT="[\\pC]"
+
+  # given set wd_style to show the basename of the cwd
+  export GP_WD_STYLE="basename"
+
+
+  # when we run the prompt
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+  # then
+  # - the working directory should be the folder name
+  # - it should be coloured up-to-date
+
+  wd=$(basename $PWD)
+
+  expected_prompt="[${UP_TO_DATE}${wd}${RESET}]"
+  echo -e "Expected: '$expected_prompt'" >&2
+  echo -e "Output:   '$output'" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
 @test "wd style: cwd" {
   skip
