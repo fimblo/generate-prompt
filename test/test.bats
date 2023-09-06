@@ -294,6 +294,13 @@ teardown () {
 }
 
 @test "a conflict should update the prompt" {
+  # repo should uncoloured
+  # \pK should contain "(conflict: 1)"
+  # will write later
+  skip
+}
+@test "an add after conflict should update the prompt" {
+  # repo should be uncoloured
   # will write later
   skip
 }
