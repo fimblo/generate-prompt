@@ -317,7 +317,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(wd, "%s", full_path + common_length);
   }
   else {
-    // if GP_GIT_WD_STYLE is set, but doesn't match any of the above
+    // if GP_WD_STYLE is set, but doesn't match any of the above
     // conditions, assume it can be safely added to the prompt. if it
     // isn't set, go with basename (set above)
     sprintf(wd, "%s", wd_style);

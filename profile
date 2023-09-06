@@ -50,7 +50,7 @@ unset GP_RESET
 ##################################################
 # Styles
 
-unset GP_GIT_WD_STYLE
-# export GP_GIT_WD_STYLE='basename'
-# export GP_GIT_WD_STYLE='cwd'
-# export GP_GIT_WD_STYLE='gitrelpath'
+unset GP_WD_STYLE
+# export GP_WD_STYLE='basename'
+# export GP_WD_STYLE='cwd'
+# export GP_WD_STYLE='gitrelpath'

@@ -51,7 +51,7 @@ setup () {
   export GP_GIT_PROMPT='REPO:\pR:LOCALBRANCH:\pL:WD:\pC:'
 
   # styles
-  unset GP_GIT_WD_STYLE
+  unset GP_WD_STYLE
 
 
   # Set global git user/email if it is not set
