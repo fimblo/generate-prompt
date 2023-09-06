@@ -6,24 +6,24 @@ bats_require_minimum_version 1.5.0
 # bats test/test.bats
 
 
-helper__init_repo() {
+helper__new_repo() {
   git init
 }
 
-helper__add_a_file() {
+helper__new_repo_and_add_file() {
   file_to_commit="$1"
   content_to_commit="$2"
 
-  helper__init_repo
+  helper__new_repo
   echo "$content_to_commit" > $file_to_commit
   git add $file_to_commit
 }
 
-helper__commit_to_new_repo() {
+helper__new_repo_and_commit() {
   file_to_commit="$1"
   content_to_commit="$2"
 
-  helper__add_a_file "$file_to_commit" "$content_to_commit"
+  helper__new_repo_and_add_file "$file_to_commit" "$content_to_commit"
   git commit -m 'Initial commit'
 }
 
@@ -113,7 +113,7 @@ teardown () {
 # --------------------------------------------------
 @test "empty git repository shows default prompt" {
   # given we create a repo - and we do nothing more
-  git init
+  helper__new_repo
 
   # when we run the prompt
   run -${EXIT_NO_LOCAL_REF} $GENERATE_PROMPT
@@ -126,10 +126,9 @@ teardown () {
 # --------------------------------------------------
 @test "adding file to git repo doesn't alter prompt" {
   # given we create a repo, add a file but don't commit
-  git init
-  touch FOO
-  git add FOO
+  helper__new_repo_and_add_file
 
+  
   # when we run the prompt
   run -${EXIT_NO_LOCAL_REF} $GENERATE_PROMPT
 
@@ -141,7 +140,7 @@ teardown () {
 # --------------------------------------------------
 @test "committing in empty git repo updates prompt" {
   # given we create a repo and commit a file
-  helper__commit_to_new_repo "newfile" "some text"
+  helper__new_repo_and_commit "newfile" "some text"
 
   # when we run the prompt
   run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
@@ -170,7 +169,7 @@ teardown () {
 # --------------------------------------------------
 @test "modifying tracked file updates prompt" {
   # given we modify a tracked file
-  helper__commit_to_new_repo "newfile" "some text"
+  helper__new_repo_and_commit "newfile" "some text"
   echo > newfile
 
   # when we run the prompt
@@ -200,7 +199,7 @@ teardown () {
 # --------------------------------------------------
 @test "changing localbranch updates prompt" {
   # given we have a git repo
-  helper__commit_to_new_repo "newfile" "some text"
+  helper__new_repo_and_commit "newfile" "some text"
 
   # given we change localbranch
   git checkout -b featureBranch
@@ -229,7 +228,7 @@ teardown () {
   # given we have a git repo
   mkdir myRepo
   cd myRepo
-  helper__commit_to_new_repo "newfile" "some text"
+  helper__new_repo_and_commit "newfile" "some text"
   cd -
 
   # given we clone it
@@ -262,7 +261,7 @@ teardown () {
   # given we have a git repo
   mkdir myRepo
   cd myRepo
-  helper__commit_to_new_repo "newfile" "some text"
+  helper__new_repo_and_commit "newfile" "some text"
   cd -
 
   # given we clone it
@@ -313,7 +312,7 @@ teardown () {
 # --------------------------------------------------
 @test "wd style:basename shows only directory name" {
   # set things up
-  helper__commit_to_new_repo "newfile" "some text"
+  helper__new_repo_and_commit "newfile" "some text"
   export GP_GIT_PROMPT="[\\pC]"
 
   # given set wd_style to show the basename of the cwd
