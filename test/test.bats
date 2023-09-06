@@ -126,7 +126,7 @@ teardown () {
 # --------------------------------------------------
 @test "adding file to git repo doesn't alter prompt" {
   # given we create a repo, add a file but don't commit
-  helper__new_repo_and_add_file
+  helper__new_repo_and_add_file "newfile" "some text"
 
   
   # when we run the prompt
