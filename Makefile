@@ -51,6 +51,9 @@ install-local: $(BINS)
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
 
+debug: CFLAGS += -g  # Add -g flag for debugging
+debug: build  # Build with debugging support
+
 
 test:
 	bats test
