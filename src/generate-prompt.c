@@ -179,11 +179,7 @@ int main() {
   }
 
 
-  // Strange bug. When a repo is in conflict, then the function
-  // git_reference_lookup fails to populate upstream_ref, resulting in
-  // a segfault inside of the compareDivergence function. I think
-  // it's something something the repo is in an inconsistent state,
-  // and there's no ref to compare.
+
   if (repo_status.conflict_count == 0) {
     char full_remote_branch_name[128];
     sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
@@ -197,7 +193,19 @@ int main() {
     }
     else {
       upstream_oid = git_reference_target(upstream_ref);
-      calculateDivergence(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
+
+      // if the upstream_oid is null, we can't get the divergence, so
+      // might as well set it to NO_DATA. Oh and btw, when there's no
+      // conflict _and_ upstream_OID is NULL, then it seems we're
+      // inside of an interactive rebase - when it's not useful to
+      // check for divergences anyway. 
+      if (upstream_oid == NULL) {
+        repo_status.repo = NO_DATA;
+      }
+      else {
+        calculateDivergence(repo, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
+      }
+      
     }
 
     // check if local and remote are the same

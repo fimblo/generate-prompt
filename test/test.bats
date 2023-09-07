@@ -386,12 +386,12 @@ teardown () {
 
 
   # then we should get a git prompt
-  # where the repo field should be uncoloured and \pK should contain
-  # "(conflict: 1)"
+  # where the repo field should be uncoloured and \pK should expand to
+  # the empty string.
   repo=myRepo
   l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
 
-  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:CONFLICT:${CONFLICT}(conflict: 1)${RESET}:"
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:CONFLICT::"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
