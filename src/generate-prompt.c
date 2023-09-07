@@ -180,14 +180,20 @@ int main() {
 
 
 
-  if (repo_status.conflict_count == 0) {
+  if (repo_status.conflict_count != 0) {
+    // If we're in conflict, mark the repo state accordingly.
+    repo_status.repo = NO_DATA;
+  }
+  else {
     char full_remote_branch_name[128];
     sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
 
     // If there is no upstream ref, this is probably a stand-alone branch
     git_reference *upstream_ref = NULL;
     const git_oid *upstream_oid;
-    if (git_reference_lookup(&upstream_ref, repo, full_remote_branch_name) != 0) {
+
+    const int retval = git_reference_lookup(&upstream_ref, repo, full_remote_branch_name);
+    if (retval != 0) {
       git_reference_free(upstream_ref);
       repo_status.repo = NO_DATA;
     }
@@ -215,10 +221,6 @@ int main() {
     }
 
     git_reference_free(upstream_ref);
-  }
-  else {
-    // Since we're in conflict, mark the repo state accordingly.
-    repo_status.repo = NO_DATA;
   }
 
 
