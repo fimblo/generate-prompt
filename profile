@@ -29,7 +29,7 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 
 # Git prompt pattern
 unset GP_GIT_PROMPT
-export GP_GIT_PROMPT="[\\pR/\\pL/\\pC]\\pK\n$ "
+export GP_GIT_PROMPT="[\\pR/\\pL/\\pC]\\pk\n$ "
 
 # All instructions, mostly for testing
 # export GP_GIT_PROMPT="[\pb\pR\pa\pd/\pL/\pC]\n$ ";
