@@ -6,6 +6,10 @@
 #include <git2.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 /** --------------------------------------------------
  * Common global stuff
@@ -29,6 +33,7 @@ struct RepoStatus {
   int ahead;
   int behind;
   int conflict_count;
+  int rebase_in_progress;
 };
 
 // exit codes
@@ -100,12 +105,13 @@ int main() {
 
   struct RepoStatus repo_status;
 
-  repo_status.repo           = UP_TO_DATE;
-  repo_status.index          = UP_TO_DATE;
-  repo_status.wdir           = UP_TO_DATE;
-  repo_status.ahead          = 0;
-  repo_status.behind         = 0;
-  repo_status.conflict_count = 0;
+  repo_status.repo               = UP_TO_DATE;
+  repo_status.index              = UP_TO_DATE;
+  repo_status.wdir               = UP_TO_DATE;
+  repo_status.ahead              = 0;
+  repo_status.behind             = 0;
+  repo_status.conflict_count     = 0;
+  repo_status.rebase_in_progress = 0;
 
   // get path to git repo at '.' else print default prompt
   const char *git_repository_path = findGitRepositoryPath(".");      // "/path/to/projectName"
@@ -178,6 +184,17 @@ int main() {
     }
   }
 
+
+  // check if we're doing an interactive rebase
+  char rebaseMergePath[2048];
+  char rebaseApplyPath[2048];
+  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", git_repository_path);
+  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", git_repository_path);
+
+  struct stat mergeStat, applyStat;
+  if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
+    repo_status.rebase_in_progress = 1;
+  }
 
 
   if (repo_status.conflict_count != 0) {
@@ -301,6 +318,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   };
   const char *wd_style = getenv("GP_WD_STYLE") ?: "basename";
   const char *conflict_style = getenv("GP_CONFLICT_STYLE") ?: "(conflict: %d)";
+  const char *rebase_style = getenv("GP_REBASE_STYLE") ?: "(interactive rebase)";
 
 
   // handle working directory (wd) style
@@ -331,6 +349,15 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     // conditions, assume it can be safely added to the prompt. if it
     // isn't set, go with basename (set above)
     sprintf(wd, "%s", wd_style);
+  }
+
+  // handle interactive rebase style
+  char rebase[64];
+  if (repo_status->rebase_in_progress == 1) {
+    sprintf(rebase, "%s", rebase_style);
+  }
+  else {
+    rebase[0] = '\0';
   }
 
 
@@ -379,6 +406,8 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     { "\\pd", divergence_ab            },
     { "\\pa", divergence_a             },
     { "\\pb", divergence_b             },
+
+    { "\\pi", rebase                   },
   };
 
   

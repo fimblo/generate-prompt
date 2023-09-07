@@ -66,6 +66,7 @@ Currently supported Instructions:
 - =\pb= replaced with number of commits local is behind of upstream
 - =\pd= replaced with combination of =\pa= and =\pb=. "=(a:-b)="
 - =\pK= replaced with warning about conflicts in git repo, if there are any. (=\pk= for undecorated)
+- =\pi= replaced with "(interactive rebase)" if in that state.
 
 Note that upper-case Instructions are decorated with Pre- and postfix
 patterns (see below)
@@ -86,6 +87,10 @@ below.
 - If set to =gitrelpath_inclusive=, output the full path from
   git-root, including the project name
   
+**** =\pi= style
+You can override the default string used to indicate an ongoing
+interactive rebase by setting the =GP_REBASE_STYLE= environment
+variable.
 
 *** Patterns
 These are environment variables which override some particular part of

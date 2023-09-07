@@ -43,6 +43,7 @@ setup () {
   # pre- and postfix patterns
   unset GP_UP_TO_DATE
   unset GP_MODIFIED
+  unset GP_CONFLICT
   unset GP_NO_DATA
   unset GP_RESET
 
@@ -382,7 +383,7 @@ teardown () {
   git add newfile
 
   # when we run the prompt
-  export GP_GIT_PROMPT="REPO:\\pR:CONFLICT:\\pK:"
+  export GP_GIT_PROMPT="REPO:\\pR:CONFLICT:\\pK:REBASE:\\pi"
   run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
 
 
@@ -392,7 +393,7 @@ teardown () {
   repo=myRepo
   l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
 
-  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:CONFLICT::"
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:CONFLICT::REBASE:(interactive rebase)"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
