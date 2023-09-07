@@ -348,10 +348,58 @@ teardown () {
 
 
 @test "an add after conflict should update the prompt" {
-  # repo should be uncoloured
-  # will write later
-  skip
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to a new location
+  mkdir tmp
+  cd tmp
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in the first repo 
+  cd myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+  cd -
+
+  # given we commit a change to the same file in the second repo
+  cd tmp/myRepo
+  echo "different message" > newfile
+  git add newfile
+  git commit -m 'update the file with "different message"'
+
+  # given we pull changes from upstream
+  git pull || true
+
+  # given we fix the file and add it
+  echo "different message" > newfile
+  git add newfile
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:CONFLICT:\\pK:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt
+  # where the repo field should be uncoloured and \pK should contain
+  # "(conflict: 1)"
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:CONFLICT:${CONFLICT}(conflict: 1)${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
+
+
 @test "local/upstream divergence (ahead) updates prompt" {
   # will write later
   skip
