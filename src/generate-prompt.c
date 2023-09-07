@@ -317,9 +317,9 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   }
   else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, full_path);
-    sprintf(wd, "%s", full_path + common_length);
+    sprintf(wd, ":%s", full_path + common_length);
     if (strlen(wd) == 0) {
-      sprintf(wd, "                                         //");
+      sprintf(wd, ":/");
     }
   }
   else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) { // show the entire path, from git-root (inclusive)
