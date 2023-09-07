@@ -335,51 +335,56 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // substitute base instructions
-  char repo_temp[256]   = { '\0' };
-  char branch_temp[256] = { '\0' };
-  char cwd_temp[2048]   = { '\0' };
-  sprintf(repo_temp,   "%s%s%s", colour[repo_status->repo],  repo_status->repo_name,   colour[RESET]);
-  sprintf(branch_temp, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
-  sprintf(cwd_temp,    "%s%s%s", colour[repo_status->wdir],  wd,                       colour[RESET]);
+  char repo_colour[256]   = { '\0' };
+  char branch_colour[256] = { '\0' };
+  char cwd_colour[2048]   = { '\0' };
+  sprintf(repo_colour,   "%s%s%s", colour[repo_status->repo],  repo_status->repo_name,   colour[RESET]);
+  sprintf(branch_colour, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
+  sprintf(cwd_colour,    "%s%s%s", colour[repo_status->wdir],  wd,                       colour[RESET]);
 
   // prep for conflicts
-  char conflict_temp[32]         = { '\0' };
-  char conflict_colour_temp[32]  = { '\0' };
+  char conflict[32]         = { '\0' };
+  char conflict_colour[32]  = { '\0' };
   if (repo_status->conflict_count > 0) {
-    sprintf(conflict_temp, conflict_style, repo_status->conflict_count);
-    sprintf(conflict_colour_temp, "%s%s%s", colour[CONFLICT], conflict_temp, colour[RESET]);
+    sprintf(conflict, conflict_style, repo_status->conflict_count);
+    sprintf(conflict_colour, "%s%s%s", colour[CONFLICT], conflict, colour[RESET]);
   }
 
   // prep for commit divergence 
-  char divergence_ab_temp[16]        = { '\0' };
-  char divergence_a_temp[4]          = { '\0' };
-  char divergence_b_temp[4]          = { '\0' };
+  char divergence_ab[16] = { '\0' };
+  char divergence_a[4]   = { '\0' };
+  char divergence_b[4]   = { '\0' };
   if (repo_status->ahead + repo_status->behind > 0)
-    sprintf(divergence_ab_temp, "(%d,-%d)", repo_status->ahead, repo_status->behind);
+    sprintf(divergence_ab, "(%d,-%d)", repo_status->ahead, repo_status->behind);
   if (repo_status->ahead != 0)
-    sprintf(divergence_a_temp, "%d", repo_status->ahead);
+    sprintf(divergence_a, "%d", repo_status->ahead);
   if (repo_status->behind != 0)
-    sprintf(divergence_b_temp, "%d", repo_status->behind);
+    sprintf(divergence_b, "%d", repo_status->behind);
 
 
   // apply all instructions found
-  const char* instructions[] =
-    { "\\pr",                  "\\pl",                   "\\pc",
-      "\\pR",                  "\\pL",                   "\\pC",
-      "\\pd",                  "\\pa",                   "\\pb",
-      "\\pk",                  "\\pK"
-    };
-  const char* replacements[] =
-    { repo_status->repo_name,  repo_status->branch_name, wd,
-      repo_temp,               branch_temp,              cwd_temp,
-      divergence_ab_temp,      divergence_a_temp,        divergence_b_temp,
-      conflict_temp,           conflict_colour_temp
-    };
+  const char* instructions[][2] = {
+    { "\\pR", repo_colour              },
+    { "\\pr", repo_status->repo_name   },
 
+    { "\\pL", branch_colour            },
+    { "\\pl", repo_status->branch_name },
+
+    { "\\pC", cwd_colour               },
+    { "\\pc", wd                       },
+
+    { "\\pK", conflict_colour          },
+    { "\\pk", conflict                 },
+
+    { "\\pd", divergence_ab            },
+    { "\\pa", divergence_a             },
+    { "\\pb", divergence_b             },
+  };
+
+  
   char* prompt = strdup(undigestedPrompt);
-
   for (unsigned long i = 0; i < sizeof(instructions) / sizeof(instructions[0]); i++) {
-    prompt = substitute(prompt, instructions[i], replacements[i]);
+    prompt = substitute(prompt, instructions[i][0], instructions[i][1]);
   }
 
   printf("%s", prompt);
