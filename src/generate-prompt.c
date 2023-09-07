@@ -182,7 +182,7 @@ int main() {
 
   if (repo_status.conflict_count != 0) {
     // If we're in conflict, mark the repo state accordingly.
-    repo_status.repo = NO_DATA;
+    repo_status.repo = CONFLICT;
   }
   else {
     char full_remote_branch_name[128];

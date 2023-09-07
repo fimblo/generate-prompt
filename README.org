@@ -132,6 +132,7 @@ Prefix patterns:
 #+begin_src bash
  export GP_UP_TO_DATE="\033[0;32m"
  export GP_MODIFIED="\033[0;33m"
+ export GP_CONFLICT="\033[0;31m"
  export GP_NO_DATA="\033[0;37m"
 #+end_src
 

@@ -338,7 +338,7 @@ teardown () {
   repo=myRepo
   l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
 
-  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:CONFLICT:${CONFLICT}(conflict: 1)${RESET}:"
+  expected_prompt="REPO:${CONFLICT}${repo}${RESET}:CONFLICT:${CONFLICT}(conflict: 1)${RESET}:"
   echo -e "Expected: $expected_prompt" >&2
   echo -e "Output:   $output" >&2
 
@@ -347,6 +347,7 @@ teardown () {
 }
 
 
+# --------------------------------------------------
 @test "an add after conflict should update the prompt" {
   # given we have a git repo
   mkdir myRepo

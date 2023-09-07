@@ -38,12 +38,14 @@ export GP_GIT_PROMPT="[\\pR/\\pL/\\pC]\\pK\n$ "
 # Pre- and postfix patterns
 unset GP_UP_TO_DATE
 unset GP_MODIFIED
+unset CONFLICT
 unset GP_NO_DATA
 unset GP_RESET
 # The state colours mentioned above can be overridden using these
 # environment variables.
 # export GP_UP_TO_DATE="\033[0;32m"
 # export GP_MODIFIED="\033[0;33m"
+# export GP_CONFLICT="\033[0;31m"
 # export GP_NO_DATA="\033[0;37m"
 # export GP_RESET="\033[0m"
 
