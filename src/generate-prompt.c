@@ -317,6 +317,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"
   };
   const char *wd_style = getenv("GP_WD_STYLE") ?: "basename";
+  const char *wd_relroot_pattern = getenv("GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN") ?: ":";
   const char *conflict_style = getenv("GP_CONFLICT_STYLE") ?: "(conflict: %d)";
   const char *rebase_style = getenv("GP_REBASE_STYLE") ?: "(interactive rebase)";
   const char *a_divergence_style  = getenv("GP_A_DIVERGENCE_STYLE")  ?: "%d";
@@ -338,9 +339,9 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   }
   else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, full_path);
-    sprintf(wd, ":%s", full_path + common_length);
+    sprintf(wd, "%s%s", wd_relroot_pattern, full_path + common_length);
     if (strlen(wd) == 0) {
-      sprintf(wd, ":/");
+      sprintf(wd, "%s", wd_relroot_pattern); // if path is empty, use this pattern so that state (colour) shows
     }
   }
   else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) { // show the entire path, from git-root (inclusive)

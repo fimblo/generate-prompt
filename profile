@@ -61,7 +61,8 @@ unset GP_WD_STYLE
 # export GP_WD_STYLE="gitrelpath_exclusive"
 # export GP_WD_STYLE="%s"
 
-
+unset GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN
+# export GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN=":"
 
 unset GP_CONFLICT_STYLE
 # export GP_CONFLICT_STYLE="(conflict: %d)"

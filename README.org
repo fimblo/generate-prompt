@@ -82,10 +82,15 @@ below.
 
 - If unset or set to =basename=, =\pC= will output the basename of CWD.
 - If set to =cwd=, output the full path from the user's =$HOME=.
-- If set to =gitrelpath_exclusive=, output the full path from
-  git-root, excluding the project name
 - If set to =gitrelpath_inclusive=, output the full path from
   git-root, including the project name
+- If set to =gitrelpath_exclusive=, output the full path from
+  git-root, excluding the project name. This is nice in that it
+  doesn't repeat the name of the project when standing at the root of
+  the repo, but then there is no text to colour when the repo is not
+  in up-to-date state. To address this, there's an environment
+  variable you can use to set what is written at the root of the repo:
+  =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN=. 
   
 **** =\pi= style
 You can override the default string used to indicate an ongoing
@@ -179,6 +184,8 @@ Postfix patterns:
 Though these are all currently used for colours, one can use these for
 arbitrary text.
 
+**** Other patterns
+- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN= (sic)
 
 
 ** Dependencies
