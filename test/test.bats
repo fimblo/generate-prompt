@@ -402,18 +402,148 @@ teardown () {
 }
 
 
-@test "local/upstream divergence (ahead) updates prompt" {
-  # will write later
-  skip
+# --------------------------------------------------
+@test "prompt is updated if local is behind upstream" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to anotherLocation/myRepo
+  mkdir anotherLocation
+  cd anotherLocation
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in the first repo 
+  cd myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+  cd -
+
+  # given we git fetch in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  git fetch
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:BEHIND:\\pb:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt where
+  # - the repo field should be MODIFIED and
+  # - behind is 1
+  
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:BEHIND:1:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
-@test "local/upstream divergence (behind) updates prompt" {
-  # will write later
-  skip
+
+
+
+# --------------------------------------------------
+@test "prompt is updated if local is ahead of upstream" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to anotherLocation/myRepo
+  mkdir anotherLocation
+  cd anotherLocation
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:AHEAD:\\pa:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt where
+  # - the repo field should be MODIFIED and
+  # - ahead is 1
+
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:AHEAD:1:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
-@test "local/upstream divergence (both ahead and behind) updates prompt" {
-  # will write later
-  skip
+
+
+# --------------------------------------------------
+@test "prompt is updated when local is both ahead and behind upstream" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to anotherLocation/myRepo
+  mkdir anotherLocation
+  cd anotherLocation
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in the first repo 
+  cd myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+  cd -
+
+  # given we commit another change in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  echo "new text2" > otherfile
+  git add otherfile
+  git commit -m 'update a file with "new text2"'
+  cd -
+
+  # given we git fetch in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  git fetch
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:AHEAD_AND_BEHIND:\\pd:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt where
+  # - the repo field should be MODIFIED and
+  # - behind is 1
+  
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:AHEAD_AND_BEHIND:(1,-1):"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
+
+
 # --------------------------------------------------
 @test "wd style:basename shows only directory name" {
   # set things up
@@ -439,6 +569,10 @@ teardown () {
 
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
+}
+@test "interactive rebase updates prompt" {
+  # will write later
+  skip
 }
 @test "wd style: cwd inside of \$HOME" {
   # will write later
