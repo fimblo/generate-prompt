@@ -1,3 +1,14 @@
+
+#+begin_comment
+TODO
+- add GP_CONFLICT_STYLE style doc
+- Also add examples for each of these styles
+- make better video
+- move the "Showing state through colours" section. Actually, just re-write it completely.
+#+end_comment
+
+
+
 * generate-prompt
 [[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
 
@@ -96,12 +107,6 @@ below.
 You can override the default string used to indicate an ongoing
 interactive rebase by setting the =GP_REBASE_STYLE= environment
 variable.
-
-#+begin_comment
-TODO
-- add GP_CONFLICT_STYLE style doc
-- Also add examples for each of these styles
-#+end_comment
 
 **** =\pa=, =\pb=, and =\pd= Styles
 Generate-prompt can tell when the local repo has diverged from the
