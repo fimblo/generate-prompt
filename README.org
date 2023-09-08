@@ -2,7 +2,6 @@
 #+begin_comment
 TODO
 - add GP_CONFLICT_STYLE style doc
-- Also add examples for each of these styles
 - make better video
 - move the "Showing state through colours" section. Actually, just re-write it completely.
 #+end_comment
@@ -85,7 +84,7 @@ patterns (see below)
 *** Instruction Styles
 Instructions can be further configured using Styles. 
 
-**** =\pC= Styles
+**** Current working directory (=\pC=) Styles
 The part of the prompt which shows the current working directory, is
 governed by the =\pC= Instruction. To change its style, you
 can set the environment variable =GP_WD_STYLE= to one of styles
@@ -101,23 +100,41 @@ below.
   the repo, but then there is no text to colour when the repo is not
   in up-to-date state. To address this, there's an environment
   variable you can use to set what is written at the root of the repo:
-  =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN=. 
+  =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN=.
+
+  For example:
+  #+begin_src bash
+    export GP_WD_STYLE=gitrelpath_exclusive
+    export GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN='☃️'
+  #+end_src
+
+  This would make =\pC= expand to the complete path from the root of
+  the git repo to the directory you're standing in, and replace the
+  name of the repo with ☃️.
   
-**** =\pi= style
+**** Interactive rebase (=\pi=) Style
 You can override the default string used to indicate an ongoing
 interactive rebase by setting the =GP_REBASE_STYLE= environment
 variable.
 
-**** =\pa=, =\pb=, and =\pd= Styles
+For example:
+#+begin_src bash
+  export GP_REBASE_STYLE="(interactive rebase)"
+#+end_src
+
+This would make the prompt show the string "(interactive rebase)" when
+the repo you're standing in is in the interactive rebase state.
+
+**** Upstream divergence (=\pa=, =\pb=, and =\pd=) Styles
 Generate-prompt can tell when the local repo has diverged from the
 upstream ref. What is shown in the prompt in these situations is
 governed by the three Instructions =\pa= (ahead), =\pb= (behind), and
 =\pd= (both ahead and behind of upstream ref). To change what these
 look like, set one or all of the following environment variables:
 
-- GP_A_DIVERGENCE_STYLE
-- GP_B_DIVERGENCE_STYLE
-- GP_AB_DIVERGENCE_STYLE
+- =GP_A_DIVERGENCE_STYLE=
+- =GP_B_DIVERGENCE_STYLE=
+- =GP_AB_DIVERGENCE_STYLE=
 
 These are used directly as printf formats, so you'll need to set =%d=
 in them to specify where the diffs should be displayed.
@@ -164,6 +181,7 @@ You may have noticed that there are three peculiar substrings in the
 example above, which start with a =\p=, followed by a character. These
 are the [[#instructions][Instructions]] mentioned above.
 
+
 **** Pre- and postfix patterns
 Some Instructions will decorate the output with colours,
 depending on context.
@@ -190,7 +208,7 @@ Though these are all currently used for colours, one can use these for
 arbitrary text.
 
 **** Other patterns
-- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN= (sic)
+- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN= ([[#pc-styles][sic]])
 
 
 ** Dependencies
