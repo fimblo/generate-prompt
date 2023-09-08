@@ -99,7 +99,6 @@ teardown () {
 }
 
 
-
 # --------------------------------------------------
 @test "override default prompt with GP_DEFAULT_PROMPT" {
   # given we set a envvar to override the default prompt
@@ -298,6 +297,147 @@ teardown () {
 
 
 # --------------------------------------------------
+@test "prompt is updated if local is behind upstream" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to anotherLocation/myRepo
+  mkdir anotherLocation
+  cd anotherLocation
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in the first repo 
+  cd myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+  cd -
+
+  # given we git fetch in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  git fetch
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:BEHIND:\\pb:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt where
+  # - the repo field should be MODIFIED and
+  # - behind is 1
+  
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:BEHIND:1:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
+
+
+# --------------------------------------------------
+@test "prompt is updated if local is ahead of upstream" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to anotherLocation/myRepo
+  mkdir anotherLocation
+  cd anotherLocation
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:AHEAD:\\pa:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt where
+  # - the repo field should be MODIFIED and
+  # - ahead is 1
+
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:AHEAD:1:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
+
+
+# --------------------------------------------------
+@test "prompt is updated when local is both ahead and behind upstream" {
+  # given we have a git repo
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  cd -
+
+  # given we clone it to anotherLocation/myRepo
+  mkdir anotherLocation
+  cd anotherLocation
+  git clone ../myRepo
+  cd -
+
+  # given we commit a change in the first repo 
+  cd myRepo
+  echo "new text" > newfile
+  git add newfile
+  git commit -m 'update the file with "new text"'
+  cd -
+
+  # given we commit another change in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  echo "new text2" > otherfile
+  git add otherfile
+  git commit -m 'update a file with "new text2"'
+  cd -
+
+  # given we git fetch in anotherLocation/myRepo
+  cd anotherLocation/myRepo
+  git fetch
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:AHEAD_AND_BEHIND:\\pd:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt where
+  # - the repo field should be MODIFIED and
+  # - behind is 1
+  
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:AHEAD_AND_BEHIND:(1,-1):"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
+
+
+# --------------------------------------------------
 @test "a conflict should update the prompt" {
   # given we have a git repo
   mkdir myRepo
@@ -403,148 +543,6 @@ teardown () {
 
 
 # --------------------------------------------------
-@test "prompt is updated if local is behind upstream" {
-  # given we have a git repo
-  mkdir myRepo
-  cd myRepo
-  helper__new_repo_and_commit "newfile" "some text"
-  cd -
-
-  # given we clone it to anotherLocation/myRepo
-  mkdir anotherLocation
-  cd anotherLocation
-  git clone ../myRepo
-  cd -
-
-  # given we commit a change in the first repo 
-  cd myRepo
-  echo "new text" > newfile
-  git add newfile
-  git commit -m 'update the file with "new text"'
-  cd -
-
-  # given we git fetch in anotherLocation/myRepo
-  cd anotherLocation/myRepo
-  git fetch
-
-  # when we run the prompt
-  export GP_GIT_PROMPT="REPO:\\pR:BEHIND:\\pb:"
-  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
-
-
-  # then we should get a git prompt where
-  # - the repo field should be MODIFIED and
-  # - behind is 1
-  
-  repo=myRepo
-  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
-
-  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:BEHIND:1:"
-  echo -e "Expected: $expected_prompt" >&2
-  echo -e "Output:   $output" >&2
-
-  evaluated_prompt=$(echo -e $expected_prompt)
-  [ "$output" =  "$evaluated_prompt" ]
-}
-
-
-
-# --------------------------------------------------
-@test "prompt is updated if local is ahead of upstream" {
-  # given we have a git repo
-  mkdir myRepo
-  cd myRepo
-  helper__new_repo_and_commit "newfile" "some text"
-  cd -
-
-  # given we clone it to anotherLocation/myRepo
-  mkdir anotherLocation
-  cd anotherLocation
-  git clone ../myRepo
-  cd -
-
-  # given we commit a change in anotherLocation/myRepo
-  cd anotherLocation/myRepo
-  echo "new text" > newfile
-  git add newfile
-  git commit -m 'update the file with "new text"'
-
-
-  # when we run the prompt
-  export GP_GIT_PROMPT="REPO:\\pR:AHEAD:\\pa:"
-  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
-
-
-  # then we should get a git prompt where
-  # - the repo field should be MODIFIED and
-  # - ahead is 1
-
-  repo=myRepo
-  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
-
-  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:AHEAD:1:"
-  echo -e "Expected: $expected_prompt" >&2
-  echo -e "Output:   $output" >&2
-
-  evaluated_prompt=$(echo -e $expected_prompt)
-  [ "$output" =  "$evaluated_prompt" ]
-}
-
-
-# --------------------------------------------------
-@test "prompt is updated when local is both ahead and behind upstream" {
-  # given we have a git repo
-  mkdir myRepo
-  cd myRepo
-  helper__new_repo_and_commit "newfile" "some text"
-  cd -
-
-  # given we clone it to anotherLocation/myRepo
-  mkdir anotherLocation
-  cd anotherLocation
-  git clone ../myRepo
-  cd -
-
-  # given we commit a change in the first repo 
-  cd myRepo
-  echo "new text" > newfile
-  git add newfile
-  git commit -m 'update the file with "new text"'
-  cd -
-
-  # given we commit another change in anotherLocation/myRepo
-  cd anotherLocation/myRepo
-  echo "new text2" > otherfile
-  git add otherfile
-  git commit -m 'update a file with "new text2"'
-  cd -
-
-  # given we git fetch in anotherLocation/myRepo
-  cd anotherLocation/myRepo
-  git fetch
-
-  # when we run the prompt
-  export GP_GIT_PROMPT="REPO:\\pR:AHEAD_AND_BEHIND:\\pd:"
-  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
-
-
-  # then we should get a git prompt where
-  # - the repo field should be MODIFIED and
-  # - behind is 1
-  
-  repo=myRepo
-  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
-
-  expected_prompt="REPO:${MODIFIED}${repo}${RESET}:AHEAD_AND_BEHIND:(1,-1):"
-  echo -e "Expected: $expected_prompt" >&2
-  echo -e "Output:   $output" >&2
-
-  evaluated_prompt=$(echo -e $expected_prompt)
-  [ "$output" =  "$evaluated_prompt" ]
-}
-
-
-# --------------------------------------------------
 @test "wd style:basename shows only directory name" {
   # set things up
   helper__new_repo_and_commit "newfile" "some text"
@@ -570,22 +568,75 @@ teardown () {
   evaluated_prompt=$(echo -e $expected_prompt)
   [ "$output" =  "$evaluated_prompt" ]
 }
+
+
+# --------------------------------------------------
 @test "interactive rebase updates prompt" {
-  # will write later
-  skip
+  # given we have a git repo which we have some commits on
+  mkdir myRepo
+  cd myRepo
+  helper__new_repo_and_commit "newfile" "some text"
+  echo "hello" > newfile
+  git commit -a -m '2nd commit'
+  echo "bye" > newfile
+  git commit -a -m '3rd commit'
+  cd -
+
+  # given we enter an interactive rebase session
+  cd myRepo
+  cat<<-EOF>edit.sh
+	#!/bin/bash
+	sed -i 's/^pick/edit/' \$1
+	EOF
+  chmod 755 edit.sh
+  GIT_SEQUENCE_EDITOR=./edit.sh git rebase -i HEAD^1
+  
+  # then
+  # - the repo should go into NO_DATA state
+  # - \\pi
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:REBASE:\\pi:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+
+  # then we should get a git prompt
+  # where the repo field should be uncoloured and \pK should expand to
+  # the empty string.
+  repo=myRepo
+  l_branch=$(cat .git/HEAD | tr '/' ' ' | cut -d\   -f 4)
+
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:REBASE:(interactive rebase):"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
 }
+
+
+# --------------------------------------------------
 @test "wd style: cwd inside of \$HOME" {
   # will write later
   skip
 }
+
+
+# --------------------------------------------------
 @test "wd style: cwd outside of \$HOME" {
   # will write later
   skip
 }
+
+
+# --------------------------------------------------
 @test "wd style: gitrelpath_exclusive" {
   # will write later
   skip
 }
+
+
+# --------------------------------------------------
 @test "wd style: gitrelpath_inclusive" {
   # will write later
   skip
