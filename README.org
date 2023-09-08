@@ -92,6 +92,36 @@ You can override the default string used to indicate an ongoing
 interactive rebase by setting the =GP_REBASE_STYLE= environment
 variable.
 
+#+begin_comment
+TODO
+- add GP_CONFLICT_STYLE style doc
+- Also add examples for each of these styles
+#+end_comment
+
+**** =\pa=, =\pb=, and =\pd= Styles
+Generate-prompt can tell when the local repo has diverged from the
+upstream ref. What is shown in the prompt in these situations is
+governed by the three Instructions =\pa= (ahead), =\pb= (behind), and
+=\pd= (both ahead and behind of upstream ref). To change what these
+look like, set one or all of the following environment variables:
+
+- GP_A_DIVERGENCE_STYLE
+- GP_B_DIVERGENCE_STYLE
+- GP_AB_DIVERGENCE_STYLE
+
+These are used directly as printf formats, so you'll need to set =%d=
+in them to specify where the diffs should be displayed.
+
+For example, if we're behind by 1 and ahead by 2, and you set these like so:
+#+begin_src bash
+  export GP_A_DIVERGENCE_STYLE="(%d)"
+  export GP_B_DIVERGENCE_STYLE="(-%d)"
+  export GP_AB_DIVERGENCE_STYLE="(%d,-%d)"
+#+end_src
+
+Then =\pa= will expand to "(1)", =\pb= will expand to "(-2)", and
+=\pd= will expand to "(1,-2)".
+
 *** Patterns
 These are environment variables which override some particular part of
 the default look of generate-prompt.

@@ -319,6 +319,9 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   const char *wd_style = getenv("GP_WD_STYLE") ?: "basename";
   const char *conflict_style = getenv("GP_CONFLICT_STYLE") ?: "(conflict: %d)";
   const char *rebase_style = getenv("GP_REBASE_STYLE") ?: "(interactive rebase)";
+  const char *a_divergence_style  = getenv("GP_A_DIVERGENCE_STYLE")  ?: "%d";
+  const char *b_divergence_style  = getenv("GP_B_DIVERGENCE_STYLE")  ?: "%d";
+  const char *ab_divergence_style = getenv("GP_AB_DIVERGENCE_STYLE") ?: "(%d,-%d)";
 
 
   // handle working directory (wd) style
@@ -382,11 +385,11 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char divergence_a[4]   = { '\0' };
   char divergence_b[4]   = { '\0' };
   if (repo_status->ahead + repo_status->behind > 0)
-    sprintf(divergence_ab, "(%d,-%d)", repo_status->ahead, repo_status->behind);
+    sprintf(divergence_ab, ab_divergence_style, repo_status->ahead, repo_status->behind);
   if (repo_status->ahead != 0)
-    sprintf(divergence_a, "%d", repo_status->ahead);
+    sprintf(divergence_a, a_divergence_style, repo_status->ahead);
   if (repo_status->behind != 0)
-    sprintf(divergence_b, "%d", repo_status->behind);
+    sprintf(divergence_b, b_divergence_style, repo_status->behind);
 
 
   // apply all instructions found

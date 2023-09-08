@@ -29,7 +29,7 @@ export GP_DEFAULT_PROMPT="\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\0
 
 # Git prompt pattern
 unset GP_GIT_PROMPT
-export GP_GIT_PROMPT="[\\pR/\\pL/\\pC]\\pk\\pi\n$ "
+export GP_GIT_PROMPT="[\pR/\pL/\pC]\pk\pi\n$ "
 
 # All instructions, mostly for testing
 # export GP_GIT_PROMPT="[\pb\pR\pa\pd/\pL/\pC]\n$ ";
@@ -49,10 +49,32 @@ unset GP_RESET
 # export GP_NO_DATA="\033[0;37m"
 # export GP_RESET="\033[0m"
 
+
+
 ##################################################
 # Styles
 
 unset GP_WD_STYLE
-# export GP_WD_STYLE='basename'
-# export GP_WD_STYLE='cwd'
-# export GP_WD_STYLE='gitrelpath'
+# export GP_WD_STYLE="basename"
+# export GP_WD_STYLE="cwd"
+# export GP_WD_STYLE="gitrelpath_inclusive"
+# export GP_WD_STYLE="gitrelpath_exclusive"
+# export GP_WD_STYLE="%s"
+
+
+
+unset GP_CONFLICT_STYLE
+# export GP_CONFLICT_STYLE="(conflict: %d)"
+
+unset GP_REBASE_STYLE
+# export GP_REBASE_STYLE="(interactive rebase)"
+
+unset GP_A_DIVERGENCE_STYLE
+# export GP_A_DIVERGENCE_STYLE="%d"
+
+unset GP_B_DIVERGENCE_STYLE
+# export GP_B_DIVERGENCE_STYLE="%d"
+
+unset GP_AB_DIVERGENCE_STYLE
+# export GP_AB_DIVERGENCE_STYLE="(%d,-%d)"
+

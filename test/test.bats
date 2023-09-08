@@ -53,6 +53,11 @@ setup () {
 
   # styles
   unset GP_WD_STYLE
+  unset GP_CONFLICT_STYLE
+  unset GP_REBASE_STYLE
+  unset GP_A_DIVERGENCE_STYLE
+  unset GP_B_DIVERGENCE_STYLE
+  unset GP_AB_DIVERGENCE_STYLE
 
 
   # Set global git user/email if it is not set
