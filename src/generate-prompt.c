@@ -14,12 +14,31 @@
 /** --------------------------------------------------
  * Common global stuff
  */
+
+// max buffer sizes
+#define MAX_PATH_BUFFER_SIZE   2048
+#define MAX_REPO_BUFFER_SIZE   256
+#define MAX_BRANCH_BUFFER_SIZE 256
+#define MAX_STYLE_BUFFER_SIZE  64
+
+
 enum states {
   UP_TO_DATE  = 0,
   MODIFIED    = 1,
   CONFLICT    = 2,
   NO_DATA     = 3,
   RESET       = 4,
+};
+
+enum exit_code {
+  // success codes
+  EXIT_GIT_PROMPT        =  0,
+  EXIT_DEFAULT_PROMPT    =  1,
+  EXIT_ABSENT_LOCAL_REF  =  2,
+
+  // failure codes
+  EXIT_FAIL_GIT_STATUS   = -1,
+  EXIT_FAIL_REPO_OBJ     = -2,
 };
 
 // used to pass repo info around between functions
@@ -36,17 +55,6 @@ struct RepoStatus {
   int rebase_in_progress;
 };
 
-// exit codes
-enum exit_code {
-  // success codes
-  EXIT_GIT_PROMPT        =  0,
-  EXIT_DEFAULT_PROMPT    =  1,
-  EXIT_ABSENT_LOCAL_REF  =  2,
-
-  // failure codes
-  EXIT_FAIL_GIT_STATUS   = -1,
-  EXIT_FAIL_REPO_OBJ     = -2,
-};
 
 
 /** --------------------------------------------------
@@ -186,8 +194,8 @@ int main() {
 
 
   // check if we're doing an interactive rebase
-  char rebaseMergePath[2048];
-  char rebaseApplyPath[2048];
+  char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
+  char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
   snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", git_repository_path);
   snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", git_repository_path);
 
@@ -316,18 +324,18 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",
     [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"
   };
-  const char *wd_style = getenv("GP_WD_STYLE") ?: "basename";
-  const char *wd_relroot_pattern = getenv("GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN") ?: ":";
-  const char *conflict_style = getenv("GP_CONFLICT_STYLE") ?: "(conflict: %d)";
-  const char *rebase_style = getenv("GP_REBASE_STYLE") ?: "(interactive rebase)";
-  const char *a_divergence_style  = getenv("GP_A_DIVERGENCE_STYLE")  ?: "%d";
-  const char *b_divergence_style  = getenv("GP_B_DIVERGENCE_STYLE")  ?: "%d";
-  const char *ab_divergence_style = getenv("GP_AB_DIVERGENCE_STYLE") ?: "(%d,-%d)";
+  const char *wd_style            = getenv("GP_WD_STYLE")                              ?: "basename";
+  const char *wd_relroot_pattern  = getenv("GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN") ?: ":";
+  const char *conflict_style      = getenv("GP_CONFLICT_STYLE")                        ?: "(conflict: %d)";
+  const char *rebase_style        = getenv("GP_REBASE_STYLE")                          ?: "(interactive rebase)";
+  const char *a_divergence_style  = getenv("GP_A_DIVERGENCE_STYLE")                    ?: "%d";
+  const char *b_divergence_style  = getenv("GP_B_DIVERGENCE_STYLE")                    ?: "%d";
+  const char *ab_divergence_style = getenv("GP_AB_DIVERGENCE_STYLE")                   ?: "(%d,-%d)";
 
 
   // handle working directory (wd) style
-  char wd[2048]; 
-  char full_path[2048];
+  char wd[MAX_PATH_BUFFER_SIZE]; 
+  char full_path[MAX_PATH_BUFFER_SIZE];
   getcwd(full_path, sizeof(full_path));
   if (strcmp(wd_style, "basename") == 0) {                  // show basename
     sprintf(wd, "%s", basename(full_path));
@@ -356,7 +364,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   }
 
   // handle interactive rebase style
-  char rebase[64];
+  char rebase[MAX_STYLE_BUFFER_SIZE];
   if (repo_status->rebase_in_progress == 1) {
     sprintf(rebase, "%s", rebase_style);
   }
@@ -366,25 +374,25 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // substitute base instructions
-  char repo_colour[256]   = { '\0' };
-  char branch_colour[256] = { '\0' };
-  char cwd_colour[2048]   = { '\0' };
+  char repo_colour[MAX_REPO_BUFFER_SIZE]     = { '\0' };
+  char branch_colour[MAX_BRANCH_BUFFER_SIZE] = { '\0' };
+  char cwd_colour[MAX_PATH_BUFFER_SIZE]      = { '\0' };
   sprintf(repo_colour,   "%s%s%s", colour[repo_status->repo],  repo_status->repo_name,   colour[RESET]);
   sprintf(branch_colour, "%s%s%s", colour[repo_status->index], repo_status->branch_name, colour[RESET]);
   sprintf(cwd_colour,    "%s%s%s", colour[repo_status->wdir],  wd,                       colour[RESET]);
 
   // prep for conflicts
-  char conflict[32]         = { '\0' };
-  char conflict_colour[32]  = { '\0' };
+  char conflict[MAX_STYLE_BUFFER_SIZE]        = { '\0' };
+  char conflict_colour[MAX_STYLE_BUFFER_SIZE] = { '\0' };
   if (repo_status->conflict_count > 0) {
     sprintf(conflict, conflict_style, repo_status->conflict_count);
     sprintf(conflict_colour, "%s%s%s", colour[CONFLICT], conflict, colour[RESET]);
   }
 
   // prep for commit divergence 
-  char divergence_ab[16] = { '\0' };
-  char divergence_a[4]   = { '\0' };
-  char divergence_b[4]   = { '\0' };
+  char divergence_ab[MAX_STYLE_BUFFER_SIZE] = { '\0' };
+  char divergence_a[MAX_STYLE_BUFFER_SIZE]  = { '\0' };
+  char divergence_b[MAX_STYLE_BUFFER_SIZE]  = { '\0' };
   if (repo_status->ahead + repo_status->behind > 0)
     sprintf(divergence_ab, ab_divergence_style, repo_status->ahead, repo_status->behind);
   if (repo_status->ahead != 0)
