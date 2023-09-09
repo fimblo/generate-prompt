@@ -85,7 +85,7 @@ void printGitPrompt(const struct RepoStatus *repo_status);
   Returns absolute path to the git repository, sans the '.git/'
   directory.
 */
-const char* findGitRepositoryPath(const char *path);
+const char *findGitRepositoryPath(const char *path);
 
 
 /**
@@ -101,7 +101,7 @@ int calculateDivergence(git_repository *repo,
 /**
   Helper for doing the actual substitution.
 */
-char* substitute (const char * text, const char * search, const char * replacement);
+char *substitute (const char *text, const char *search, const char *replacement);
 
 
 
@@ -266,7 +266,7 @@ int main() {
 /**
  * Return path to repo else empty string
  */
-const char* findGitRepositoryPath(const char *path) {
+const char *findGitRepositoryPath(const char *path) {
   git_buf repo_path = { 0 };
   int error = git_repository_discover(&repo_path, path, 0, NULL);
 
@@ -316,7 +316,7 @@ void printNonGitPrompt() {
 void printGitPrompt(const struct RepoStatus *repo_status) {
 
   // environment, else default values
-  const char* undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\\pk\n$ ";
+  const char *undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\\pk\n$ ";
   const char *colour[5] = {
     [ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\033[0;32m",
     [ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\033[0;33m",
@@ -341,7 +341,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(wd, "%s", basename(full_path));
   }
   else if (strcmp(wd_style, "cwd") == 0) {                  // show the entire path, from $HOME
-    const char * home = getenv("HOME") ?: "";
+    const char *home = getenv("HOME") ?: "";
     size_t common_length = strspn(full_path, home);
     sprintf(wd, "~/%s", full_path + common_length);
   }
@@ -402,7 +402,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // apply all instructions found
-  const char* instructions[][2] = {
+  const char *instructions[][2] = {
     { "\\pR", repo_colour              },
     { "\\pr", repo_status->repo_name   },
 
@@ -423,7 +423,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   };
 
   
-  char* prompt = strdup(undigestedPrompt);
+  char *prompt = strdup(undigestedPrompt);
   for (unsigned long i = 0; i < sizeof(instructions) / sizeof(instructions[0]); i++) {
     prompt = substitute(prompt, instructions[i][0], instructions[i][1]);
   }
@@ -484,16 +484,16 @@ int calculateDivergence(git_repository *repo,
 /**
  * Helper: substitute
  */
-char* substitute(const char* text, const char* search, const char* replacement) {
-  char* message = strdup(text);
-  char* found = strstr(message, search);
+char *substitute(const char *text, const char *search, const char *replacement) {
+  char *message = strdup(text);
+  char *found = strstr(message, search);
 
   while (found) {
     size_t prefix_length = found - message;
     size_t suffix_length = strlen(found + strlen(search));
 
     size_t new_length = prefix_length + strlen(replacement) + suffix_length + 1;
-    char* temp = malloc(new_length);  // Allocate temporary buffer for the new string
+    char *temp = malloc(new_length);  // Allocate temporary buffer for the new string
 
     strncpy(temp, message, prefix_length);
     temp[prefix_length] = '\0';
