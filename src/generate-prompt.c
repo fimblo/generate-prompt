@@ -186,6 +186,10 @@ int getRepoHeadRef(struct RepoStatus *repo_status) {
   repo_status->head_oid = head_oid;
   return 1;
 }
+void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
+  repo_status->repo_name = strrchr(repo_status->repo_path, '/') + 1;
+  repo_status->branch_name = git_reference_shorthand(repo_status->head_ref);
+}
 
 
 /** --------------------------------------------------
@@ -212,11 +216,8 @@ int main() {
   }
 
   // get repo name and branch names
-  repo_status.repo_name = strrchr(repo_status.repo_path, '/') + 1; // "projectName"
-  repo_status.branch_name = git_reference_shorthand(repo_status.head_ref);
-  char full_local_branch_name[128];
-  sprintf(full_local_branch_name, "refs/heads/%s",  repo_status.branch_name);
-
+  extractRepoAndBranchNames(&repo_status);
+  
   // set up git status
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
