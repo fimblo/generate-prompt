@@ -48,7 +48,10 @@ struct RepoStatus {
   const char *repo_name;
   const char *repo_path;
   const char *branch_name;
-
+  git_reference *head_ref;
+  const git_oid *head_oid;
+  git_status_list *status_list;
+  
   // Repo state
   int s_repo;
   int s_index;
@@ -111,6 +114,13 @@ int calculateDivergence(git_repository *repo,
 char *substitute (const char *text, const char *search, const char *replacement);
 
 void initializeRepoStatus(struct RepoStatus *repo_status) {
+  repo_status->repo_obj           = NULL;
+  repo_status->repo_name          = NULL;
+  repo_status->repo_path          = NULL;
+  repo_status->branch_name        = NULL;
+  repo_status->head_ref           = NULL;
+  repo_status->head_oid           = NULL;
+  repo_status->status_list        = NULL;
   repo_status->s_repo             = UP_TO_DATE;
   repo_status->s_index            = UP_TO_DATE;
   repo_status->s_wdir             = UP_TO_DATE;
@@ -135,12 +145,46 @@ int findAndOpenGitRepository(struct RepoStatus *repo_status) {
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
     free((void *) git_repository_path);
+    git_repository_free(repo);
     repo_status->exit_code = EXIT_FAIL_REPO_OBJ;
     return 0;
   }
 
   repo_status->repo_obj = repo;
   return 1;
+}
+
+void cleanupResources(struct RepoStatus *repo_status) {
+  if (repo_status->repo_obj) {
+    git_repository_free(repo_status->repo_obj);
+    repo_status->repo_obj = NULL;
+  }
+  if (repo_status->head_ref) {
+    git_reference_free(repo_status->head_ref);
+    repo_status->head_ref = NULL;
+  }
+  if (repo_status->status_list) {
+    git_status_list_free(repo_status->status_list);
+    repo_status->status_list = NULL;
+  }
+  if (repo_status->repo_path) {
+    free((void *) repo_status->repo_path);
+    repo_status->repo_path = NULL;
+  }
+  git_libgit2_shutdown();
+}
+int getRepoHeadRef(struct RepoStatus *repo_status) {
+    git_reference *head_ref = NULL;
+    const git_oid *head_oid;
+    if (git_repository_head(&head_ref, repo_status->repo_obj) != 0) {
+        repo_status->exit_code = EXIT_ABSENT_LOCAL_REF;
+        return 0;
+    }
+    head_oid = git_reference_target(head_ref);
+
+    repo_status->head_ref = head_ref;
+    repo_status->head_oid = head_oid;
+    return 1;
 }
 
 
@@ -161,20 +205,15 @@ int main() {
 
 
   // if we can't get ref to repo, it means we haven't committed anything yet.
-  git_reference *head_ref = NULL;
-  const git_oid *head_oid;
-  if (git_repository_head(&head_ref, repo_status.repo_obj) != 0) {
-    git_repository_free(repo_status.repo_obj);
-    free((void *) repo_status.repo_path);
-    git_libgit2_shutdown();
+  if (!getRepoHeadRef(&repo_status)) {
     printNonGitPrompt();
-    return EXIT_ABSENT_LOCAL_REF;
+    cleanupResources(&repo_status);
+    return repo_status.exit_code;
   }
-  head_oid = git_reference_target(head_ref);
 
   // get repo name and branch names
   repo_status.repo_name = strrchr(repo_status.repo_path, '/') + 1; // "projectName"
-  repo_status.branch_name = git_reference_shorthand(head_ref);
+  repo_status.branch_name = git_reference_shorthand(repo_status.head_ref);
   char full_local_branch_name[128];
   sprintf(full_local_branch_name, "refs/heads/%s",  repo_status.branch_name);
 
@@ -185,9 +224,7 @@ int main() {
 
   git_status_list *status_list = NULL;
   if (git_status_list_new(&status_list, repo_status.repo_obj, &opts) != 0) {
-    git_reference_free(head_ref);
-    git_repository_free(repo_status.repo_obj);
-    free((void *) repo_status.repo_path);
+    cleanupResources(&repo_status);
     git_libgit2_shutdown();
     printNonGitPrompt();
     return EXIT_FAIL_GIT_STATUS;
@@ -233,7 +270,7 @@ int main() {
   }
   else {
     char full_remote_branch_name[128];
-    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(head_ref));
+    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_status.head_ref));
 
     // If there is no upstream ref, this is probably a stand-alone branch
     git_reference *upstream_ref = NULL;
@@ -256,14 +293,14 @@ int main() {
         repo_status.s_repo = NO_DATA;
       }
       else {
-        calculateDivergence(repo_status.repo_obj, head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
+        calculateDivergence(repo_status.repo_obj, repo_status.head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
       }
       
     }
 
     // check if local and remote are the same
     if (repo_status.s_repo == UP_TO_DATE) {
-      if (git_oid_cmp(head_oid, upstream_oid) != 0)
+      if (git_oid_cmp(repo_status.head_oid, upstream_oid) != 0)
         repo_status.s_repo = MODIFIED;
     }
 
@@ -275,10 +312,7 @@ int main() {
   printGitPrompt(&repo_status);
 
   // clean up before we end
-  git_status_list_free(status_list);
-  git_reference_free(head_ref);
-  git_repository_free(repo_status.repo_obj);
-  free((void *) repo_status.repo_path);
+  cleanupResources(&repo_status);
   git_libgit2_shutdown();
 
   return EXIT_GIT_PROMPT;
