@@ -238,7 +238,55 @@ void checkForInteractiveRebase(struct RepoStatus *repo_status) {
   if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
     repo_status->rebase_in_progress = 1;
   }
+}
 
+void checkForConflictsAndDivergence(struct RepoStatus *repo_status) {
+  if (repo_status->conflict_count != 0) {
+    // If we're in conflict, mark the repo state accordingly.
+    repo_status->s_repo = CONFLICT;
+  }
+  else {
+    char full_remote_branch_name[128];
+    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_status->head_ref));
+
+    // If there is no upstream ref, this is probably a stand-alone branch
+    git_reference *upstream_ref = NULL;
+    const git_oid *upstream_oid;
+
+    const int retval = git_reference_lookup(&upstream_ref, repo_status->repo_obj, full_remote_branch_name);
+    if (retval != 0) {
+      git_reference_free(upstream_ref);
+      repo_status->s_repo = NO_DATA;
+    }
+    else {
+      upstream_oid = git_reference_target(upstream_ref);
+
+      // if the upstream_oid is null, we can't get the divergence, so
+      // might as well set it to NO_DATA. Oh and btw, when there's no
+      // conflict _and_ upstream_OID is NULL, then it seems we're
+      // inside of an interactive rebase - when it's not useful to
+      // check for divergences anyway.
+      if (upstream_oid == NULL) {
+        repo_status->s_repo = NO_DATA;
+      }
+      else {
+        calculateDivergence(repo_status->repo_obj,
+                            repo_status->head_oid,
+                            upstream_oid,
+                            &repo_status->ahead,
+                            &repo_status->behind);
+      }
+
+    }
+
+    // check if local and remote are the same
+    if (repo_status->s_repo == UP_TO_DATE) {
+      if (git_oid_cmp(repo_status->head_oid, upstream_oid) != 0)
+        repo_status->s_repo = MODIFIED;
+    }
+
+    git_reference_free(upstream_ref);
+  }
 }
 
 /** --------------------------------------------------
@@ -266,52 +314,9 @@ int main() {
 
   extractRepoAndBranchNames(&repo_status);
   setupAndRetrieveGitStatus(&repo_status);
-
-  // check if we're doing an interactive rebase
   checkForInteractiveRebase(&repo_status);
+  checkForConflictsAndDivergence(&repo_status);
 
-  if (repo_status.conflict_count != 0) {
-    // If we're in conflict, mark the repo state accordingly.
-    repo_status.s_repo = CONFLICT;
-  }
-  else {
-    char full_remote_branch_name[128];
-    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_status.head_ref));
-
-    // If there is no upstream ref, this is probably a stand-alone branch
-    git_reference *upstream_ref = NULL;
-    const git_oid *upstream_oid;
-
-    const int retval = git_reference_lookup(&upstream_ref, repo_status.repo_obj, full_remote_branch_name);
-    if (retval != 0) {
-      git_reference_free(upstream_ref);
-      repo_status.s_repo = NO_DATA;
-    }
-    else {
-      upstream_oid = git_reference_target(upstream_ref);
-
-      // if the upstream_oid is null, we can't get the divergence, so
-      // might as well set it to NO_DATA. Oh and btw, when there's no
-      // conflict _and_ upstream_OID is NULL, then it seems we're
-      // inside of an interactive rebase - when it's not useful to
-      // check for divergences anyway.
-      if (upstream_oid == NULL) {
-        repo_status.s_repo = NO_DATA;
-      }
-      else {
-        calculateDivergence(repo_status.repo_obj, repo_status.head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
-      }
-
-    }
-
-    // check if local and remote are the same
-    if (repo_status.s_repo == UP_TO_DATE) {
-      if (git_oid_cmp(repo_status.head_oid, upstream_oid) != 0)
-        repo_status.s_repo = MODIFIED;
-    }
-
-    git_reference_free(upstream_ref);
-  }
 
 
   // print the git prompt now that we have the info
