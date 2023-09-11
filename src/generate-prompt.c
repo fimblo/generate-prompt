@@ -347,10 +347,13 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   }
   else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, full_path);
-    sprintf(wd, "%s%s", wd_relroot_pattern, full_path + common_length);
-    if (strlen(wd) == 0) {
-      sprintf(wd, "%s", wd_relroot_pattern); // if path is empty, use this pattern so that state (colour) shows
+    if (common_length == strlen(full_path)) {
+      sprintf(wd, "%s", wd_relroot_pattern);      
     }
+    else {
+      sprintf(wd, "%s%s", wd_relroot_pattern, full_path + common_length + 1);
+    }
+
   }
   else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) { // show the entire path, from git-root (inclusive)
     size_t common_length = strspn(dirname((char *) repo_status->repo_path), full_path) + 1;
