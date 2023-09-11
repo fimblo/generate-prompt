@@ -591,9 +591,10 @@ teardown () {
   cd myRepo
   cat<<-EOF>edit.sh
 	#!/bin/bash
-	sed -i 's/^pick/edit/' \$1
+	sed -i'bak' 's/^pick/edit/' \$1
 	EOF
   chmod 755 edit.sh
+  cat edit.sh >&2
   GIT_SEQUENCE_EDITOR=./edit.sh git rebase -i HEAD^1
   
   # then
