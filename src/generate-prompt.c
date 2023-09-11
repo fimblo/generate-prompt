@@ -139,8 +139,6 @@ int main() {
     return repo_status.exit_code;
   }
 
-
-  // if we can't get ref to repo, it means we haven't committed anything yet.
   if (!getRepoHeadRef(&repo_status)) {
     printNonGitPrompt();
     cleanupResources(&repo_status);
@@ -153,11 +151,9 @@ int main() {
   checkForConflictsAndDivergence(&repo_status);
 
 
-
-  // print the git prompt now that we have the info
   printGitPrompt(&repo_status);
 
-  // clean up before we end
+
   cleanupResources(&repo_status);
   git_libgit2_shutdown();
 
