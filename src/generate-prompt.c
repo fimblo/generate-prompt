@@ -113,181 +113,16 @@ int calculateDivergence(git_repository *repo,
 */
 char *substitute (const char *text, const char *search, const char *replacement);
 
-void initializeRepoStatus(struct RepoStatus *repo_status) {
-  repo_status->repo_obj           = NULL;
-  repo_status->repo_name          = NULL;
-  repo_status->repo_path          = NULL;
-  repo_status->branch_name        = NULL;
-  repo_status->head_ref           = NULL;
-  repo_status->head_oid           = NULL;
-  repo_status->status_list        = NULL;
-  repo_status->s_repo             = UP_TO_DATE;
-  repo_status->s_index            = UP_TO_DATE;
-  repo_status->s_wdir             = UP_TO_DATE;
-  repo_status->ahead              = 0;
-  repo_status->behind             = 0;
-  repo_status->conflict_count     = 0;
-  repo_status->rebase_in_progress = 0;
-  repo_status->exit_code          = 0;
-}
 
+void initializeRepoStatus(struct RepoStatus *repo_status);
+int findAndOpenGitRepository(struct RepoStatus *repo_status);
+void cleanupResources(struct RepoStatus *repo_status);
+int getRepoHeadRef(struct RepoStatus *repo_status);
+void extractRepoAndBranchNames(struct RepoStatus *repo_status);
+void setupAndRetrieveGitStatus(struct RepoStatus *repo_status);
+void checkForInteractiveRebase(struct RepoStatus *repo_status);
+void checkForConflictsAndDivergence(struct RepoStatus *repo_status);
 
-int findAndOpenGitRepository(struct RepoStatus *repo_status) {
-  // "/path/to/projectName"
-  const char *git_repository_path = findGitRepositoryPath(".");
-  if (strlen(git_repository_path) == 0) {
-    free((void *) git_repository_path);
-    repo_status->exit_code = EXIT_DEFAULT_PROMPT;
-    return 0;
-  }
-  repo_status->repo_path = git_repository_path;
-
-  git_repository *repo = NULL;
-  if (git_repository_open(&repo, git_repository_path) != 0) {
-    free((void *) git_repository_path);
-    git_repository_free(repo);
-    repo_status->exit_code = EXIT_FAIL_REPO_OBJ;
-    return 0;
-  }
-
-  repo_status->repo_obj = repo;
-  return 1;
-}
-
-void cleanupResources(struct RepoStatus *repo_status) {
-  if (repo_status->repo_obj) {
-    git_repository_free(repo_status->repo_obj);
-    repo_status->repo_obj = NULL;
-  }
-  if (repo_status->head_ref) {
-    git_reference_free(repo_status->head_ref);
-    repo_status->head_ref = NULL;
-  }
-  if (repo_status->status_list) {
-    git_status_list_free(repo_status->status_list);
-    repo_status->status_list = NULL;
-  }
-  if (repo_status->repo_path) {
-    free((void *) repo_status->repo_path);
-    repo_status->repo_path = NULL;
-  }
-  git_libgit2_shutdown();
-}
-int getRepoHeadRef(struct RepoStatus *repo_status) {
-  git_reference *head_ref = NULL;
-  const git_oid *head_oid;
-  if (git_repository_head(&head_ref, repo_status->repo_obj) != 0) {
-    repo_status->exit_code = EXIT_ABSENT_LOCAL_REF;
-    return 0;
-  }
-  head_oid = git_reference_target(head_ref);
-
-  repo_status->head_ref = head_ref;
-  repo_status->head_oid = head_oid;
-  return 1;
-}
-void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
-  repo_status->repo_name = strrchr(repo_status->repo_path, '/') + 1;
-  repo_status->branch_name = git_reference_shorthand(repo_status->head_ref);
-}
-
-
-void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
-  git_status_options opts = GIT_STATUS_OPTIONS_INIT;
-  opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
-  opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
-
-  git_status_list *status_list = NULL;
-  if (git_status_list_new(&status_list, repo_status->repo_obj, &opts) != 0) {
-    git_reference_free(repo_status->head_ref);
-    git_repository_free(repo_status->repo_obj);
-    free((void *) repo_status->repo_path);
-    repo_status->exit_code = EXIT_FAIL_GIT_STATUS;
-    return;
-  }
-
-  int status_count = git_status_list_entrycount(status_list);
-  for (int i = 0; i < status_count; i++) {
-    const git_status_entry *entry = git_status_byindex(status_list, i);
-    if (entry->status == GIT_STATUS_CURRENT) continue;
-    if (entry->status & GIT_STATUS_CONFLICTED)       repo_status->conflict_count++;
-
-    if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_status->s_index = MODIFIED;
-
-    if (entry->status & GIT_STATUS_WT_RENAMED)       repo_status->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_DELETED)       repo_status->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_status->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status->s_wdir = MODIFIED;
-  }
-
-  repo_status->status_list = status_list;
-}
-
-
-void checkForInteractiveRebase(struct RepoStatus *repo_status) {
-  char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
-  char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
-  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_status->repo_path);
-  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_status->repo_path);
-
-  struct stat mergeStat, applyStat;
-  if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
-    repo_status->rebase_in_progress = 1;
-  }
-}
-
-void checkForConflictsAndDivergence(struct RepoStatus *repo_status) {
-  if (repo_status->conflict_count != 0) {
-    // If we're in conflict, mark the repo state accordingly.
-    repo_status->s_repo = CONFLICT;
-  }
-  else {
-    char full_remote_branch_name[128];
-    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_status->head_ref));
-
-    // If there is no upstream ref, this is probably a stand-alone branch
-    git_reference *upstream_ref = NULL;
-    const git_oid *upstream_oid;
-
-    const int retval = git_reference_lookup(&upstream_ref, repo_status->repo_obj, full_remote_branch_name);
-    if (retval != 0) {
-      git_reference_free(upstream_ref);
-      repo_status->s_repo = NO_DATA;
-    }
-    else {
-      upstream_oid = git_reference_target(upstream_ref);
-
-      // if the upstream_oid is null, we can't get the divergence, so
-      // might as well set it to NO_DATA. Oh and btw, when there's no
-      // conflict _and_ upstream_OID is NULL, then it seems we're
-      // inside of an interactive rebase - when it's not useful to
-      // check for divergences anyway.
-      if (upstream_oid == NULL) {
-        repo_status->s_repo = NO_DATA;
-      }
-      else {
-        calculateDivergence(repo_status->repo_obj,
-                            repo_status->head_oid,
-                            upstream_oid,
-                            &repo_status->ahead,
-                            &repo_status->behind);
-      }
-
-    }
-
-    // check if local and remote are the same
-    if (repo_status->s_repo == UP_TO_DATE) {
-      if (git_oid_cmp(repo_status->head_oid, upstream_oid) != 0)
-        repo_status->s_repo = MODIFIED;
-    }
-
-    git_reference_free(upstream_ref);
-  }
-}
 
 /** --------------------------------------------------
  * Functions
@@ -582,4 +417,182 @@ char *substitute(const char *text, const char *search, const char *replacement) 
   }
 
   return message;
+}
+
+void initializeRepoStatus(struct RepoStatus *repo_status) {
+  repo_status->repo_obj           = NULL;
+  repo_status->repo_name          = NULL;
+  repo_status->repo_path          = NULL;
+  repo_status->branch_name        = NULL;
+  repo_status->head_ref           = NULL;
+  repo_status->head_oid           = NULL;
+  repo_status->status_list        = NULL;
+  repo_status->s_repo             = UP_TO_DATE;
+  repo_status->s_index            = UP_TO_DATE;
+  repo_status->s_wdir             = UP_TO_DATE;
+  repo_status->ahead              = 0;
+  repo_status->behind             = 0;
+  repo_status->conflict_count     = 0;
+  repo_status->rebase_in_progress = 0;
+  repo_status->exit_code          = 0;
+}
+
+
+int findAndOpenGitRepository(struct RepoStatus *repo_status) {
+  // "/path/to/projectName"
+  const char *git_repository_path = findGitRepositoryPath(".");
+  if (strlen(git_repository_path) == 0) {
+    free((void *) git_repository_path);
+    repo_status->exit_code = EXIT_DEFAULT_PROMPT;
+    return 0;
+  }
+  repo_status->repo_path = git_repository_path;
+
+  git_repository *repo = NULL;
+  if (git_repository_open(&repo, git_repository_path) != 0) {
+    free((void *) git_repository_path);
+    git_repository_free(repo);
+    repo_status->exit_code = EXIT_FAIL_REPO_OBJ;
+    return 0;
+  }
+
+  repo_status->repo_obj = repo;
+  return 1;
+}
+
+void cleanupResources(struct RepoStatus *repo_status) {
+  if (repo_status->repo_obj) {
+    git_repository_free(repo_status->repo_obj);
+    repo_status->repo_obj = NULL;
+  }
+  if (repo_status->head_ref) {
+    git_reference_free(repo_status->head_ref);
+    repo_status->head_ref = NULL;
+  }
+  if (repo_status->status_list) {
+    git_status_list_free(repo_status->status_list);
+    repo_status->status_list = NULL;
+  }
+  if (repo_status->repo_path) {
+    free((void *) repo_status->repo_path);
+    repo_status->repo_path = NULL;
+  }
+  git_libgit2_shutdown();
+}
+
+int getRepoHeadRef(struct RepoStatus *repo_status) {
+  git_reference *head_ref = NULL;
+  const git_oid *head_oid;
+  if (git_repository_head(&head_ref, repo_status->repo_obj) != 0) {
+    repo_status->exit_code = EXIT_ABSENT_LOCAL_REF;
+    return 0;
+  }
+  head_oid = git_reference_target(head_ref);
+
+  repo_status->head_ref = head_ref;
+  repo_status->head_oid = head_oid;
+  return 1;
+}
+
+void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
+  repo_status->repo_name = strrchr(repo_status->repo_path, '/') + 1;
+  repo_status->branch_name = git_reference_shorthand(repo_status->head_ref);
+}
+
+
+void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
+  git_status_options opts = GIT_STATUS_OPTIONS_INIT;
+  opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
+  opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
+
+  git_status_list *status_list = NULL;
+  if (git_status_list_new(&status_list, repo_status->repo_obj, &opts) != 0) {
+    git_reference_free(repo_status->head_ref);
+    git_repository_free(repo_status->repo_obj);
+    free((void *) repo_status->repo_path);
+    repo_status->exit_code = EXIT_FAIL_GIT_STATUS;
+    return;
+  }
+
+  int status_count = git_status_list_entrycount(status_list);
+  for (int i = 0; i < status_count; i++) {
+    const git_status_entry *entry = git_status_byindex(status_list, i);
+    if (entry->status == GIT_STATUS_CURRENT) continue;
+    if (entry->status & GIT_STATUS_CONFLICTED)       repo_status->conflict_count++;
+
+    if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_status->s_index = MODIFIED;
+
+    if (entry->status & GIT_STATUS_WT_RENAMED)       repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_DELETED)       repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status->s_wdir = MODIFIED;
+  }
+
+  repo_status->status_list = status_list;
+}
+
+
+void checkForInteractiveRebase(struct RepoStatus *repo_status) {
+  char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
+  char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
+  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_status->repo_path);
+  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_status->repo_path);
+
+  struct stat mergeStat, applyStat;
+  if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
+    repo_status->rebase_in_progress = 1;
+  }
+}
+
+void checkForConflictsAndDivergence(struct RepoStatus *repo_status) {
+  if (repo_status->conflict_count != 0) {
+    // If we're in conflict, mark the repo state accordingly.
+    repo_status->s_repo = CONFLICT;
+  }
+  else {
+    char full_remote_branch_name[128];
+    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_status->head_ref));
+
+    // If there is no upstream ref, this is probably a stand-alone branch
+    git_reference *upstream_ref = NULL;
+    const git_oid *upstream_oid;
+
+    const int retval = git_reference_lookup(&upstream_ref, repo_status->repo_obj, full_remote_branch_name);
+    if (retval != 0) {
+      git_reference_free(upstream_ref);
+      repo_status->s_repo = NO_DATA;
+    }
+    else {
+      upstream_oid = git_reference_target(upstream_ref);
+
+      // if the upstream_oid is null, we can't get the divergence, so
+      // might as well set it to NO_DATA. Oh and btw, when there's no
+      // conflict _and_ upstream_OID is NULL, then it seems we're
+      // inside of an interactive rebase - when it's not useful to
+      // check for divergences anyway.
+      if (upstream_oid == NULL) {
+        repo_status->s_repo = NO_DATA;
+      }
+      else {
+        calculateDivergence(repo_status->repo_obj,
+                            repo_status->head_oid,
+                            upstream_oid,
+                            &repo_status->ahead,
+                            &repo_status->behind);
+      }
+
+    }
+
+    // check if local and remote are the same
+    if (repo_status->s_repo == UP_TO_DATE) {
+      if (git_oid_cmp(repo_status->head_oid, upstream_oid) != 0)
+        repo_status->s_repo = MODIFIED;
+    }
+
+    git_reference_free(upstream_ref);
+  }
 }
