@@ -192,6 +192,55 @@ void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
 }
 
 
+void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
+  git_status_options opts = GIT_STATUS_OPTIONS_INIT;
+  opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
+  opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
+
+  git_status_list *status_list = NULL;
+  if (git_status_list_new(&status_list, repo_status->repo_obj, &opts) != 0) {
+    git_reference_free(repo_status->head_ref);
+    git_repository_free(repo_status->repo_obj);
+    free((void *) repo_status->repo_path);
+    repo_status->exit_code = EXIT_FAIL_GIT_STATUS;
+    return;
+  }
+
+  int status_count = git_status_list_entrycount(status_list);
+  for (int i = 0; i < status_count; i++) {
+    const git_status_entry *entry = git_status_byindex(status_list, i);
+    if (entry->status == GIT_STATUS_CURRENT) continue;
+    if (entry->status & GIT_STATUS_CONFLICTED)       repo_status->conflict_count++;
+
+    if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_status->s_index = MODIFIED;
+
+    if (entry->status & GIT_STATUS_WT_RENAMED)       repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_DELETED)       repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status->s_wdir = MODIFIED;
+  }
+
+  repo_status->status_list = status_list;
+}
+
+
+void checkForInteractiveRebase(struct RepoStatus *repo_status) {
+  char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
+  char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
+  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_status->repo_path);
+  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_status->repo_path);
+
+  struct stat mergeStat, applyStat;
+  if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
+    repo_status->rebase_in_progress = 1;
+  }
+
+}
+
 /** --------------------------------------------------
  * Functions
  */
@@ -215,55 +264,11 @@ int main() {
     return repo_status.exit_code;
   }
 
-  // get repo name and branch names
   extractRepoAndBranchNames(&repo_status);
-  
-  // set up git status
-  git_status_options opts = GIT_STATUS_OPTIONS_INIT;
-  opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
-  opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
-
-  git_status_list *status_list = NULL;
-  if (git_status_list_new(&status_list, repo_status.repo_obj, &opts) != 0) {
-    cleanupResources(&repo_status);
-    git_libgit2_shutdown();
-    printNonGitPrompt();
-    return EXIT_FAIL_GIT_STATUS;
-  }
-
-  // check index and wt for diffs
-  int status_count = git_status_list_entrycount(status_list);
-  if (status_count != 0) {
-    for (int i = 0; i < status_count; i++) {
-      const git_status_entry *entry = git_status_byindex(status_list, i);
-      if (entry->status == GIT_STATUS_CURRENT)         continue;
-      if (entry->status & GIT_STATUS_CONFLICTED)       repo_status.conflict_count++;
-
-      if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status.s_index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status.s_index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status.s_index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_status.s_index = MODIFIED;
-      if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_status.s_index = MODIFIED;
-
-      if (entry->status & GIT_STATUS_WT_RENAMED)       repo_status.s_wdir = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_DELETED)       repo_status.s_wdir = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_status.s_wdir = MODIFIED;
-      if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status.s_wdir = MODIFIED;
-    }
-  }
-
+  setupAndRetrieveGitStatus(&repo_status);
 
   // check if we're doing an interactive rebase
-  char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
-  char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
-  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_status.repo_path);
-  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_status.repo_path);
-
-  struct stat mergeStat, applyStat;
-  if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
-    repo_status.rebase_in_progress = 1;
-  }
-
+  checkForInteractiveRebase(&repo_status);
 
   if (repo_status.conflict_count != 0) {
     // If we're in conflict, mark the repo state accordingly.
