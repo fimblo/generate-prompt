@@ -51,7 +51,7 @@ struct RepoStatus {
   git_reference *head_ref;
   const git_oid *head_oid;
   git_status_list *status_list;
-  
+
   // Repo state
   int s_repo;
   int s_index;
@@ -73,43 +73,43 @@ struct RepoStatus {
 
 
 /**
-  Prints a prompt which is useful outside of git repositories.
-  Respects the environment variable GP_DEFAULT_PROMPT to override the
-  built-in version of the prompt.
+   Prints a prompt which is useful outside of git repositories.
+   Respects the environment variable GP_DEFAULT_PROMPT to override the
+   built-in version of the prompt.
 */
 void printNonGitPrompt();
 
 
 /**
-  Prints a prompt which is useful inside of git repositories.
-  Respects the environment variable GP_GIT_PROMPT to override the
-  built-in version of the prompt.
+   Prints a prompt which is useful inside of git repositories.
+   Respects the environment variable GP_GIT_PROMPT to override the
+   built-in version of the prompt.
 */
 void printGitPrompt(const struct RepoStatus *repo_status);
 
 
 /**
-  Given a path, looks recursively down toward the root of the
-  filesystem for a git project folder.
+   Given a path, looks recursively down toward the root of the
+   filesystem for a git project folder.
 
-  Returns absolute path to the git repository, sans the '.git/'
-  directory.
+   Returns absolute path to the git repository, sans the '.git/'
+   directory.
 */
 const char *findGitRepositoryPath(const char *path);
 
 
 /**
-  Returns local/upstream commit divergence
- */
+   Returns local/upstream commit divergence
+*/
 int calculateDivergence(git_repository *repo,
-                         const git_oid *local_oid,
-                         const git_oid *upstream_oid,
-                         int *ahead,
-                         int *behind);
+                        const git_oid *local_oid,
+                        const git_oid *upstream_oid,
+                        int *ahead,
+                        int *behind);
 
 
 /**
-  Helper for doing the actual substitution.
+   Helper for doing the actual substitution.
 */
 char *substitute (const char *text, const char *search, const char *replacement);
 
@@ -174,17 +174,17 @@ void cleanupResources(struct RepoStatus *repo_status) {
   git_libgit2_shutdown();
 }
 int getRepoHeadRef(struct RepoStatus *repo_status) {
-    git_reference *head_ref = NULL;
-    const git_oid *head_oid;
-    if (git_repository_head(&head_ref, repo_status->repo_obj) != 0) {
-        repo_status->exit_code = EXIT_ABSENT_LOCAL_REF;
-        return 0;
-    }
-    head_oid = git_reference_target(head_ref);
+  git_reference *head_ref = NULL;
+  const git_oid *head_oid;
+  if (git_repository_head(&head_ref, repo_status->repo_obj) != 0) {
+    repo_status->exit_code = EXIT_ABSENT_LOCAL_REF;
+    return 0;
+  }
+  head_oid = git_reference_target(head_ref);
 
-    repo_status->head_ref = head_ref;
-    repo_status->head_oid = head_oid;
-    return 1;
+  repo_status->head_ref = head_ref;
+  repo_status->head_oid = head_oid;
+  return 1;
 }
 
 
@@ -288,14 +288,14 @@ int main() {
       // might as well set it to NO_DATA. Oh and btw, when there's no
       // conflict _and_ upstream_OID is NULL, then it seems we're
       // inside of an interactive rebase - when it's not useful to
-      // check for divergences anyway. 
+      // check for divergences anyway.
       if (upstream_oid == NULL) {
         repo_status.s_repo = NO_DATA;
       }
       else {
         calculateDivergence(repo_status.repo_obj, repo_status.head_oid, upstream_oid, &repo_status.ahead, &repo_status.behind);
       }
-      
+
     }
 
     // check if local and remote are the same
@@ -390,7 +390,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
   // handle working directory (wd) style
-  char wd[MAX_PATH_BUFFER_SIZE]; 
+  char wd[MAX_PATH_BUFFER_SIZE];
   char full_path[MAX_PATH_BUFFER_SIZE];
   getcwd(full_path, sizeof(full_path));
   if (strcmp(wd_style, "basename") == 0) {                  // show basename
@@ -404,7 +404,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_status->repo_path, full_path);
     if (common_length == strlen(full_path)) {
-      sprintf(wd, "%s", wd_relroot_pattern);      
+      sprintf(wd, "%s", wd_relroot_pattern);
     }
     else {
       sprintf(wd, "%s%s", wd_relroot_pattern, full_path + common_length + 1);
@@ -448,7 +448,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(conflict_colour, "%s%s%s", colour[CONFLICT], conflict, colour[RESET]);
   }
 
-  // prep for commit divergence 
+  // prep for commit divergence
   char divergence_ab[MAX_STYLE_BUFFER_SIZE] = { '\0' };
   char divergence_a[MAX_STYLE_BUFFER_SIZE]  = { '\0' };
   char divergence_b[MAX_STYLE_BUFFER_SIZE]  = { '\0' };
@@ -481,7 +481,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     { "\\pi", rebase                   },
   };
 
-  
+
   char *prompt = strdup(undigestedPrompt);
   for (unsigned long i = 0; i < sizeof(instructions) / sizeof(instructions[0]); i++) {
     prompt = substitute(prompt, instructions[i][0], instructions[i][1]);
@@ -497,10 +497,10 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
  * @return 0 on success, non-0 on error.
  */
 int calculateDivergence(git_repository *repo,
-                         const git_oid *local_oid,
-                         const git_oid *upstream_oid,
-                         int *ahead,
-                         int *behind) {
+                        const git_oid *local_oid,
+                        const git_oid *upstream_oid,
+                        int *ahead,
+                        int *behind) {
   int aheadCount = 0;
   int behindCount = 0;
   git_oid id;
