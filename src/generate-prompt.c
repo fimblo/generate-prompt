@@ -42,7 +42,7 @@ enum exit_code {
 };
 
 // used to pass repo info around between functions
-struct RepoStatus {
+struct RepoContext {
   // Repo generics
   git_repository *repo_obj;
   const char *repo_name;
@@ -77,7 +77,7 @@ struct RepoStatus {
 void printNonGitPrompt();
 
 // Prints a Git-specific prompt with repo details.
-void printGitPrompt(const struct RepoStatus *repo_status);
+void printGitPrompt(const struct RepoContext *repo_context);
 
 // Finds the path to a Git repository from a given path.
 const char *findGitRepositoryPath(const char *path);
@@ -92,29 +92,29 @@ int calculateDivergence(git_repository *repo,
 // Replaces all instances of 'search' with 'replacement' in 'text'.
 char *substitute (const char *text, const char *search, const char *replacement);
 
-// Initializes a RepoStatus structure to default state.
-void initializeRepoStatus(struct RepoStatus *repo_status);
+// Initializes a RepoContext structure to default state.
+void initializeRepoStatus(struct RepoContext *repo_context);
 
-// Searches for and opens a git repository, updating RepoStatus.
-int findAndOpenGitRepository(struct RepoStatus *repo_status);
+// Searches for and opens a git repository, updating RepoContext.
+int findAndOpenGitRepository(struct RepoContext *repo_context);
 
-// Releases resources tied to a RepoStatus structure.
-void cleanupResources(struct RepoStatus *repo_status);
+// Releases resources tied to a RepoContext structure.
+void cleanupResources(struct RepoContext *repo_context);
 
 // Fetches head_ref and head_oid for a repository.
-int getRepoHeadRef(struct RepoStatus *repo_status);
+int getRepoHeadRef(struct RepoContext *repo_context);
 
-// Extracts project and branch names from a RepoStatus object.
-void extractRepoAndBranchNames(struct RepoStatus *repo_status);
+// Extracts project and branch names from a RepoContext object.
+void extractRepoAndBranchNames(struct RepoContext *repo_context);
 
 // Determines statuses of repo elements relative to index and working directory.
-void setupAndRetrieveGitStatus(struct RepoStatus *repo_status);
+void setupAndRetrieveGitStatus(struct RepoContext *repo_context);
 
 // Checks if the repo is in the midst of an interactive rebase.
-void checkForInteractiveRebase(struct RepoStatus *repo_status);
+void checkForInteractiveRebase(struct RepoContext *repo_context);
 
 // Identifies any conflicts/divergence between local and remote branches.
-void checkForConflictsAndDivergence(struct RepoStatus *repo_status);
+void checkForConflictsAndDivergence(struct RepoContext *repo_context);
 
 
 
@@ -122,33 +122,33 @@ void checkForConflictsAndDivergence(struct RepoStatus *repo_status);
  * Functions
  */
 int main() {
-  struct RepoStatus repo_status;
+  struct RepoContext repo_context;
 
   git_libgit2_init();
-  initializeRepoStatus(&repo_status);
+  initializeRepoStatus(&repo_context);
 
-  if(!findAndOpenGitRepository(&repo_status)) {
+  if(!findAndOpenGitRepository(&repo_context)) {
     printNonGitPrompt();
     git_libgit2_shutdown();
-    return repo_status.exit_code;
+    return repo_context.exit_code;
   }
 
-  if (!getRepoHeadRef(&repo_status)) {
+  if (!getRepoHeadRef(&repo_context)) {
     printNonGitPrompt();
-    cleanupResources(&repo_status);
-    return repo_status.exit_code;
+    cleanupResources(&repo_context);
+    return repo_context.exit_code;
   }
 
-  extractRepoAndBranchNames(&repo_status);
-  setupAndRetrieveGitStatus(&repo_status);
-  checkForInteractiveRebase(&repo_status);
-  checkForConflictsAndDivergence(&repo_status);
+  extractRepoAndBranchNames(&repo_context);
+  setupAndRetrieveGitStatus(&repo_context);
+  checkForInteractiveRebase(&repo_context);
+  checkForConflictsAndDivergence(&repo_context);
 
 
-  printGitPrompt(&repo_status);
+  printGitPrompt(&repo_context);
 
 
-  cleanupResources(&repo_status);
+  cleanupResources(&repo_context);
   git_libgit2_shutdown();
 
   return EXIT_GIT_PROMPT;
@@ -213,10 +213,10 @@ void printNonGitPrompt() {
  * information about the current Git repository, such as repository
  * name, branch name, and various statuses.
  *
- * @param repo_status A structure containing details about the
+ * @param repo_context A structure containing details about the
  *                    repository's current status.
  */
-void printGitPrompt(const struct RepoStatus *repo_status) {
+void printGitPrompt(const struct RepoContext *repo_context) {
 
   // environment, else default values
   const char *undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\\pk\n$ ";
@@ -249,7 +249,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
     sprintf(wd, "~/%s", full_path + common_length);
   }
   else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
-    size_t common_length = strspn(repo_status->repo_path, full_path);
+    size_t common_length = strspn(repo_context->repo_path, full_path);
     if (common_length == strlen(full_path)) {
       sprintf(wd, "%s", wd_relroot_pattern);
     }
@@ -259,7 +259,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
   }
   else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) { // show the entire path, from git-root (inclusive)
-    size_t common_length = strspn(dirname((char *) repo_status->repo_path), full_path) + 1;
+    size_t common_length = strspn(dirname((char *) repo_context->repo_path), full_path) + 1;
     sprintf(wd, "%s", full_path + common_length);
   }
   else {
@@ -271,7 +271,7 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
   // handle interactive rebase style
   char rebase[MAX_STYLE_BUFFER_SIZE];
-  if (repo_status->rebase_in_progress == 1) {
+  if (repo_context->rebase_in_progress == 1) {
     sprintf(rebase, "%s", rebase_style);
   }
   else {
@@ -283,15 +283,15 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char repo_colour[MAX_REPO_BUFFER_SIZE]     = { '\0' };
   char branch_colour[MAX_BRANCH_BUFFER_SIZE] = { '\0' };
   char cwd_colour[MAX_PATH_BUFFER_SIZE]      = { '\0' };
-  sprintf(repo_colour,   "%s%s%s", colour[repo_status->s_repo],  repo_status->repo_name,   colour[RESET]);
-  sprintf(branch_colour, "%s%s%s", colour[repo_status->s_index], repo_status->branch_name, colour[RESET]);
-  sprintf(cwd_colour,    "%s%s%s", colour[repo_status->s_wdir],  wd,                       colour[RESET]);
+  sprintf(repo_colour,   "%s%s%s", colour[repo_context->s_repo],  repo_context->repo_name,   colour[RESET]);
+  sprintf(branch_colour, "%s%s%s", colour[repo_context->s_index], repo_context->branch_name, colour[RESET]);
+  sprintf(cwd_colour,    "%s%s%s", colour[repo_context->s_wdir],  wd,                       colour[RESET]);
 
   // prep for conflicts
   char conflict[MAX_STYLE_BUFFER_SIZE]        = { '\0' };
   char conflict_colour[MAX_STYLE_BUFFER_SIZE] = { '\0' };
-  if (repo_status->conflict_count > 0) {
-    sprintf(conflict, conflict_style, repo_status->conflict_count);
+  if (repo_context->conflict_count > 0) {
+    sprintf(conflict, conflict_style, repo_context->conflict_count);
     sprintf(conflict_colour, "%s%s%s", colour[CONFLICT], conflict, colour[RESET]);
   }
 
@@ -299,21 +299,21 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
   char divergence_ab[MAX_STYLE_BUFFER_SIZE] = { '\0' };
   char divergence_a[MAX_STYLE_BUFFER_SIZE]  = { '\0' };
   char divergence_b[MAX_STYLE_BUFFER_SIZE]  = { '\0' };
-  if (repo_status->ahead + repo_status->behind > 0)
-    sprintf(divergence_ab, ab_divergence_style, repo_status->ahead, repo_status->behind);
-  if (repo_status->ahead != 0)
-    sprintf(divergence_a, a_divergence_style, repo_status->ahead);
-  if (repo_status->behind != 0)
-    sprintf(divergence_b, b_divergence_style, repo_status->behind);
+  if (repo_context->ahead + repo_context->behind > 0)
+    sprintf(divergence_ab, ab_divergence_style, repo_context->ahead, repo_context->behind);
+  if (repo_context->ahead != 0)
+    sprintf(divergence_a, a_divergence_style, repo_context->ahead);
+  if (repo_context->behind != 0)
+    sprintf(divergence_b, b_divergence_style, repo_context->behind);
 
 
   // apply all instructions found
   const char *instructions[][2] = {
     { "\\pR", repo_colour              },
-    { "\\pr", repo_status->repo_name   },
+    { "\\pr", repo_context->repo_name   },
 
     { "\\pL", branch_colour            },
-    { "\\pl", repo_status->branch_name },
+    { "\\pl", repo_context->branch_name },
 
     { "\\pC", cwd_colour               },
     { "\\pc", wd                       },
@@ -445,89 +445,89 @@ char *substitute(const char *text, const char *search, const char *replacement) 
 
 
 /**
- * Initializes the given RepoStatus object to its default state. The
- * RepoStatus structure is utilized to share repository-related state
+ * Initializes the given RepoContext object to its default state. The
+ * RepoContext structure is utilized to share repository-related state
  * information among various functions.
  * 
- * @param repo_status: Pointer to the RepoStatus structure to be
+ * @param repo_context: Pointer to the RepoContext structure to be
  *                     initialized.
  */
-void initializeRepoStatus(struct RepoStatus *repo_status) {
-  repo_status->repo_obj           = NULL;
-  repo_status->repo_name          = NULL;
-  repo_status->repo_path          = NULL;
-  repo_status->branch_name        = NULL;
-  repo_status->head_ref           = NULL;
-  repo_status->head_oid           = NULL;
-  repo_status->status_list        = NULL;
-  repo_status->s_repo             = UP_TO_DATE;
-  repo_status->s_index            = UP_TO_DATE;
-  repo_status->s_wdir             = UP_TO_DATE;
-  repo_status->ahead              = 0;
-  repo_status->behind             = 0;
-  repo_status->conflict_count     = 0;
-  repo_status->rebase_in_progress = 0;
-  repo_status->exit_code          = 0;
+void initializeRepoStatus(struct RepoContext *repo_context) {
+  repo_context->repo_obj           = NULL;
+  repo_context->repo_name          = NULL;
+  repo_context->repo_path          = NULL;
+  repo_context->branch_name        = NULL;
+  repo_context->head_ref           = NULL;
+  repo_context->head_oid           = NULL;
+  repo_context->status_list        = NULL;
+  repo_context->s_repo             = UP_TO_DATE;
+  repo_context->s_index            = UP_TO_DATE;
+  repo_context->s_wdir             = UP_TO_DATE;
+  repo_context->ahead              = 0;
+  repo_context->behind             = 0;
+  repo_context->conflict_count     = 0;
+  repo_context->rebase_in_progress = 0;
+  repo_context->exit_code          = 0;
 }
 
 
 /**
  * Searches upward through the directory tree from the current
  * directory ("."), attempting to locate a git repository. If found,
- * populates the RepoStatus structure with the repository and its
+ * populates the RepoContext structure with the repository and its
  * path.
  *
- * @param repo_status: Pointer to a RepoStatus structure to be
+ * @param repo_context: Pointer to a RepoContext structure to be
  *                     populated if a repo is found.
  * @return Returns 1 if a repository is found, otherwise returns 0.
  */
-int findAndOpenGitRepository(struct RepoStatus *repo_status) {
+int findAndOpenGitRepository(struct RepoContext *repo_context) {
   // "/path/to/projectName"
   const char *git_repository_path = findGitRepositoryPath(".");
   if (strlen(git_repository_path) == 0) {
     free((void *) git_repository_path);
-    repo_status->exit_code = EXIT_DEFAULT_PROMPT;
+    repo_context->exit_code = EXIT_DEFAULT_PROMPT;
     return 0;
   }
-  repo_status->repo_path = git_repository_path;
+  repo_context->repo_path = git_repository_path;
 
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
     free((void *) git_repository_path);
     git_repository_free(repo);
-    repo_status->exit_code = EXIT_FAIL_REPO_OBJ;
+    repo_context->exit_code = EXIT_FAIL_REPO_OBJ;
     return 0;
   }
 
-  repo_status->repo_obj = repo;
+  repo_context->repo_obj = repo;
   return 1;
 }
 
 
 /**
- * Frees allocated resources associated with the given RepoStatus.
+ * Frees allocated resources associated with the given RepoContext.
  * This function should be called before exiting the program to ensure 
  * that memory and other resources are properly released.
  *
- * @param repo_status: Pointer to a RepoStatus structure whose
+ * @param repo_context: Pointer to a RepoContext structure whose
  *                     resources will be freed.
  */
-void cleanupResources(struct RepoStatus *repo_status) {
-  if (repo_status->repo_obj) {
-    git_repository_free(repo_status->repo_obj);
-    repo_status->repo_obj = NULL;
+void cleanupResources(struct RepoContext *repo_context) {
+  if (repo_context->repo_obj) {
+    git_repository_free(repo_context->repo_obj);
+    repo_context->repo_obj = NULL;
   }
-  if (repo_status->head_ref) {
-    git_reference_free(repo_status->head_ref);
-    repo_status->head_ref = NULL;
+  if (repo_context->head_ref) {
+    git_reference_free(repo_context->head_ref);
+    repo_context->head_ref = NULL;
   }
-  if (repo_status->status_list) {
-    git_status_list_free(repo_status->status_list);
-    repo_status->status_list = NULL;
+  if (repo_context->status_list) {
+    git_status_list_free(repo_context->status_list);
+    repo_context->status_list = NULL;
   }
-  if (repo_status->repo_path) {
-    free((void *) repo_status->repo_path);
-    repo_status->repo_path = NULL;
+  if (repo_context->repo_path) {
+    free((void *) repo_context->repo_path);
+    repo_context->repo_path = NULL;
   }
   git_libgit2_shutdown();
 }
@@ -536,38 +536,38 @@ void cleanupResources(struct RepoStatus *repo_status) {
 /**
  * Attempts to acquire the head_ref and head_oid of the specified repo.
  *
- * @param repo_status: Pointer to a RepoStatus structure where the
+ * @param repo_context: Pointer to a RepoContext structure where the
  *                     head_ref and head_oid will be stored if found.
  * @return Returns 1 if successful in acquiring the references, and 0
  *                     otherwise.
  */
-int getRepoHeadRef(struct RepoStatus *repo_status) {
+int getRepoHeadRef(struct RepoContext *repo_context) {
   git_reference *head_ref = NULL;
   const git_oid *head_oid;
-  if (git_repository_head(&head_ref, repo_status->repo_obj) != 0) {
-    repo_status->exit_code = EXIT_ABSENT_LOCAL_REF;
+  if (git_repository_head(&head_ref, repo_context->repo_obj) != 0) {
+    repo_context->exit_code = EXIT_ABSENT_LOCAL_REF;
     return 0;
   }
   head_oid = git_reference_target(head_ref);
 
-  repo_status->head_ref = head_ref;
-  repo_status->head_oid = head_oid;
+  repo_context->head_ref = head_ref;
+  repo_context->head_oid = head_oid;
   return 1;
 }
 
 
 /**
  * Extracts the name of the git project and the current branch from
- * the provided RepoStatus object.
+ * the provided RepoContext object.
  *
- * @param repo_status: Pointer to the RepoStatus structure. After the
+ * @param repo_context: Pointer to the RepoContext structure. After the
  *                     function call, this structure will hold the
  *                     extracted git project name and the current
  *                     branch name.
  */
-void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
-  repo_status->repo_name = strrchr(repo_status->repo_path, '/') + 1;
-  repo_status->branch_name = git_reference_shorthand(repo_status->head_ref);
+void extractRepoAndBranchNames(struct RepoContext *repo_context) {
+  repo_context->repo_name = strrchr(repo_context->repo_path, '/') + 1;
+  repo_context->branch_name = git_reference_shorthand(repo_context->head_ref);
 }
 
 
@@ -576,22 +576,22 @@ void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
  * relative to the index and working directory. Also tallies any
  * conflicts.
  *
- * @param repo_status: Pointer to the RepoStatus structure. Upon
+ * @param repo_context: Pointer to the RepoContext structure. Upon
  *                     completion, this structure will reflect the
  *                     working directory, index, and conflict
  *                     statuses.
  */
-void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
+void setupAndRetrieveGitStatus(struct RepoContext *repo_context) {
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
   opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
 
   git_status_list *status_list = NULL;
-  if (git_status_list_new(&status_list, repo_status->repo_obj, &opts) != 0) {
-    git_reference_free(repo_status->head_ref);
-    git_repository_free(repo_status->repo_obj);
-    free((void *) repo_status->repo_path);
-    repo_status->exit_code = EXIT_FAIL_GIT_STATUS;
+  if (git_status_list_new(&status_list, repo_context->repo_obj, &opts) != 0) {
+    git_reference_free(repo_context->head_ref);
+    git_repository_free(repo_context->repo_obj);
+    free((void *) repo_context->repo_path);
+    repo_context->exit_code = EXIT_FAIL_GIT_STATUS;
     return;
   }
 
@@ -599,21 +599,21 @@ void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
   for (int i = 0; i < status_count; i++) {
     const git_status_entry *entry = git_status_byindex(status_list, i);
     if (entry->status == GIT_STATUS_CURRENT) continue;
-    if (entry->status & GIT_STATUS_CONFLICTED)       repo_status->conflict_count++;
+    if (entry->status & GIT_STATUS_CONFLICTED)       repo_context->conflict_count++;
 
-    if (entry->status & GIT_STATUS_INDEX_NEW)        repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_status->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_status->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_NEW)        repo_context->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_context->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_context->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_context->s_index = MODIFIED;
+    if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_context->s_index = MODIFIED;
 
-    if (entry->status & GIT_STATUS_WT_RENAMED)       repo_status->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_DELETED)       repo_status->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_status->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_status->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_RENAMED)       repo_context->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_DELETED)       repo_context->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_context->s_wdir = MODIFIED;
+    if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_context->s_wdir = MODIFIED;
   }
 
-  repo_status->status_list = status_list;
+  repo_context->status_list = status_list;
 }
 
 
@@ -622,19 +622,19 @@ void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
  * rebase operation by looking for the presence of 'rebase-merge' or
  * 'rebase-apply' directories in the '.git' folder.
  *
- * @param repo_status: Pointer to the RepoStatus structure. The
+ * @param repo_context: Pointer to the RepoContext structure. The
  *                     'rebase_in_progress' flag will be set to 1 if
  *                     an interactive rebase is in progress.
  */
-void checkForInteractiveRebase(struct RepoStatus *repo_status) {
+void checkForInteractiveRebase(struct RepoContext *repo_context) {
   char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
   char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
-  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_status->repo_path);
-  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_status->repo_path);
+  snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_context->repo_path);
+  snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_context->repo_path);
 
   struct stat mergeStat, applyStat;
   if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
-    repo_status->rebase_in_progress = 1;
+    repo_context->rebase_in_progress = 1;
   }
 }
 
@@ -642,30 +642,30 @@ void checkForInteractiveRebase(struct RepoStatus *repo_status) {
 /**
  * Inspects the repository to detect if there are any conflicts or
  * divergence between the local and remote branches. It sets the
- * 's_repo' state of the RepoStatus structure based on the findings
+ * 's_repo' state of the RepoContext structure based on the findings
  * (e.g., CONFLICT, NO_DATA, UP_TO_DATE, MODIFIED).
  *
- * @param repo_status: Pointer to the RepoStatus structure. This will
+ * @param repo_context: Pointer to the RepoContext structure. This will
  *                     be updated with conflict and divergence
  *                     information.
  */
-void checkForConflictsAndDivergence(struct RepoStatus *repo_status) {
-  if (repo_status->conflict_count != 0) {
+void checkForConflictsAndDivergence(struct RepoContext *repo_context) {
+  if (repo_context->conflict_count != 0) {
     // If we're in conflict, mark the repo state accordingly.
-    repo_status->s_repo = CONFLICT;
+    repo_context->s_repo = CONFLICT;
   }
   else {
     char full_remote_branch_name[128];
-    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_status->head_ref));
+    sprintf(full_remote_branch_name, "refs/remotes/origin/%s", git_reference_shorthand(repo_context->head_ref));
 
     // If there is no upstream ref, this is probably a stand-alone branch
     git_reference *upstream_ref = NULL;
     const git_oid *upstream_oid;
 
-    const int retval = git_reference_lookup(&upstream_ref, repo_status->repo_obj, full_remote_branch_name);
+    const int retval = git_reference_lookup(&upstream_ref, repo_context->repo_obj, full_remote_branch_name);
     if (retval != 0) {
       git_reference_free(upstream_ref);
-      repo_status->s_repo = NO_DATA;
+      repo_context->s_repo = NO_DATA;
     }
     else {
       upstream_oid = git_reference_target(upstream_ref);
@@ -676,22 +676,22 @@ void checkForConflictsAndDivergence(struct RepoStatus *repo_status) {
       // inside of an interactive rebase - when it's not useful to
       // check for divergences anyway.
       if (upstream_oid == NULL) {
-        repo_status->s_repo = NO_DATA;
+        repo_context->s_repo = NO_DATA;
       }
       else {
-        calculateDivergence(repo_status->repo_obj,
-                            repo_status->head_oid,
+        calculateDivergence(repo_context->repo_obj,
+                            repo_context->head_oid,
                             upstream_oid,
-                            &repo_status->ahead,
-                            &repo_status->behind);
+                            &repo_context->ahead,
+                            &repo_context->behind);
       }
 
     }
 
     // check if local and remote are the same
-    if (repo_status->s_repo == UP_TO_DATE) {
-      if (git_oid_cmp(repo_status->head_oid, upstream_oid) != 0)
-        repo_status->s_repo = MODIFIED;
+    if (repo_context->s_repo == UP_TO_DATE) {
+      if (git_oid_cmp(repo_context->head_oid, upstream_oid) != 0)
+        repo_context->s_repo = MODIFIED;
     }
 
     git_reference_free(upstream_ref);
