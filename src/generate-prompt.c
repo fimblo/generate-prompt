@@ -1,4 +1,4 @@
-/** --------------------------------------------------
+/* --------------------------------------------------
  * Includes
  */
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 
 
-/** --------------------------------------------------
+/* --------------------------------------------------
  * Common global stuff
  */
 
@@ -67,64 +67,58 @@ struct RepoStatus {
 
 
 
-/** --------------------------------------------------
+/* --------------------------------------------------
  * Declarations
+ * For detailed descriptions, see the function definitions further in
+ * the code.
  */
 
-
-/**
-   Prints a prompt which is useful outside of git repositories.
-   Respects the environment variable GP_DEFAULT_PROMPT to override the
-   built-in version of the prompt.
-*/
+// Prints default prompt for non-Git environments.
 void printNonGitPrompt();
 
-
-/**
-   Prints a prompt which is useful inside of git repositories.
-   Respects the environment variable GP_GIT_PROMPT to override the
-   built-in version of the prompt.
-*/
+// Prints a Git-specific prompt with repo details.
 void printGitPrompt(const struct RepoStatus *repo_status);
 
-
-/**
-   Given a path, looks recursively down toward the root of the
-   filesystem for a git project folder.
-
-   Returns absolute path to the git repository, sans the '.git/'
-   directory.
-*/
+// Finds the path to a Git repository from a given path.
 const char *findGitRepositoryPath(const char *path);
 
-
-/**
-   Returns local/upstream commit divergence
-*/
+// Calculates commit divergence between local and upstream branches.
 int calculateDivergence(git_repository *repo,
                         const git_oid *local_oid,
                         const git_oid *upstream_oid,
                         int *ahead,
                         int *behind);
 
-
-/**
-   Helper for doing the actual substitution.
-*/
+// Replaces all instances of 'search' with 'replacement' in 'text'.
 char *substitute (const char *text, const char *search, const char *replacement);
 
-
+// Initializes a RepoStatus structure to default state.
 void initializeRepoStatus(struct RepoStatus *repo_status);
+
+// Searches for and opens a git repository, updating RepoStatus.
 int findAndOpenGitRepository(struct RepoStatus *repo_status);
+
+// Releases resources tied to a RepoStatus structure.
 void cleanupResources(struct RepoStatus *repo_status);
+
+// Fetches head_ref and head_oid for a repository.
 int getRepoHeadRef(struct RepoStatus *repo_status);
+
+// Extracts project and branch names from a RepoStatus object.
 void extractRepoAndBranchNames(struct RepoStatus *repo_status);
+
+// Determines statuses of repo elements relative to index and working directory.
 void setupAndRetrieveGitStatus(struct RepoStatus *repo_status);
+
+// Checks if the repo is in the midst of an interactive rebase.
 void checkForInteractiveRebase(struct RepoStatus *repo_status);
+
+// Identifies any conflicts/divergence between local and remote branches.
 void checkForConflictsAndDivergence(struct RepoStatus *repo_status);
 
 
-/** --------------------------------------------------
+
+/* --------------------------------------------------
  * Functions
  */
 int main() {
@@ -162,7 +156,13 @@ int main() {
 
 
 /**
- * Return path to repo else empty string
+ * Searches for the path to a Git repository starting from the
+ * specified path.
+ *
+ * @param path: Initial directory path to start the search from.
+ *
+ * @return Returns the path to the discovered Git repository or an
+ *         empty string if no repository is found.
  */
 const char *findGitRepositoryPath(const char *path) {
   git_buf repo_path = { 0 };
@@ -199,8 +199,8 @@ const char *findGitRepositoryPath(const char *path) {
 
 
 /**
- * When standing in a non-git repo, or if the git prompt doesn't work,
- * use this prompt.
+ * Outputs a default command prompt when the user is not within a Git
+ * repository or if there's an issue with the Git-specific prompt.
  */
 void printNonGitPrompt() {
   const char *defaultPrompt = getenv("GP_DEFAULT_PROMPT") ?: "\\W $ ";
@@ -209,7 +209,12 @@ void printNonGitPrompt() {
 
 
 /**
- *  When standing in a git repo, use this prompt.
+ * Outputs a specialized command prompt tailored to provide
+ * information about the current Git repository, such as repository
+ * name, branch name, and various statuses.
+ *
+ * @param repo_status A structure containing details about the
+ *                    repository's current status.
  */
 void printGitPrompt(const struct RepoStatus *repo_status) {
 
@@ -335,8 +340,23 @@ void printGitPrompt(const struct RepoStatus *repo_status) {
 
 
 /**
- * Returns local/upstream commit divergence
- * @return 0 on success, non-0 on error.
+ * Calculates the commit divergence between a local branch and its
+ * upstream counterpart. It provides information about how many
+ * commits the local branch is ahead or behind the upstream.
+ *
+ * @param repo        Pointer to the Git repository in context.
+ * @param local_oid   OID (Object ID) of the local branch's latest
+ *                    commit.
+ * @param upstream_oid OID of the upstream branch's latest commit.
+ * @param ahead       Output parameter where the number of commits
+ *                    the local branch is ahead of upstream will be
+ *                    stored.
+ * @param behind      Output parameter where the number of commits
+ *                    the local branch is behind the upstream will be
+ *                    stored.
+ *                    
+ * @return Returns 0 on successful calculation, otherwise returns a
+ *         non-zero error code.
  */
 int calculateDivergence(git_repository *repo,
                         const git_oid *local_oid,
@@ -381,9 +401,17 @@ int calculateDivergence(git_repository *repo,
 }
 
 
-
 /**
- * Helper: substitute
+ * Helper function that performs a string substitution operation.
+ * It searches for occurrences of a 'search' string within a 'text'
+ * string and replaces them with a 'replacement' string.
+ *
+ * @param text        The original string where substitutions should
+ *                    be made.
+ * @param search      The substring to look for within the 'text'.
+ * @param replacement The string to replace 'search' with.
+ * @return Returns a new string with all instances of 'search'
+ *         replaced by 'replacement'.
  */
 char *substitute(const char *text, const char *search, const char *replacement) {
   char *message = strdup(text);
@@ -415,6 +443,15 @@ char *substitute(const char *text, const char *search, const char *replacement) 
   return message;
 }
 
+
+/**
+ * Initializes the given RepoStatus object to its default state. The
+ * RepoStatus structure is utilized to share repository-related state
+ * information among various functions.
+ * 
+ * @param repo_status: Pointer to the RepoStatus structure to be
+ *                     initialized.
+ */
 void initializeRepoStatus(struct RepoStatus *repo_status) {
   repo_status->repo_obj           = NULL;
   repo_status->repo_name          = NULL;
@@ -434,6 +471,16 @@ void initializeRepoStatus(struct RepoStatus *repo_status) {
 }
 
 
+/**
+ * Searches upward through the directory tree from the current
+ * directory ("."), attempting to locate a git repository. If found,
+ * populates the RepoStatus structure with the repository and its
+ * path.
+ *
+ * @param repo_status: Pointer to a RepoStatus structure to be
+ *                     populated if a repo is found.
+ * @return Returns 1 if a repository is found, otherwise returns 0.
+ */
 int findAndOpenGitRepository(struct RepoStatus *repo_status) {
   // "/path/to/projectName"
   const char *git_repository_path = findGitRepositoryPath(".");
@@ -456,6 +503,15 @@ int findAndOpenGitRepository(struct RepoStatus *repo_status) {
   return 1;
 }
 
+
+/**
+ * Frees allocated resources associated with the given RepoStatus.
+ * This function should be called before exiting the program to ensure 
+ * that memory and other resources are properly released.
+ *
+ * @param repo_status: Pointer to a RepoStatus structure whose
+ *                     resources will be freed.
+ */
 void cleanupResources(struct RepoStatus *repo_status) {
   if (repo_status->repo_obj) {
     git_repository_free(repo_status->repo_obj);
@@ -476,6 +532,15 @@ void cleanupResources(struct RepoStatus *repo_status) {
   git_libgit2_shutdown();
 }
 
+
+/**
+ * Attempts to acquire the head_ref and head_oid of the specified repo.
+ *
+ * @param repo_status: Pointer to a RepoStatus structure where the
+ *                     head_ref and head_oid will be stored if found.
+ * @return Returns 1 if successful in acquiring the references, and 0
+ *                     otherwise.
+ */
 int getRepoHeadRef(struct RepoStatus *repo_status) {
   git_reference *head_ref = NULL;
   const git_oid *head_oid;
@@ -490,12 +555,32 @@ int getRepoHeadRef(struct RepoStatus *repo_status) {
   return 1;
 }
 
+
+/**
+ * Extracts the name of the git project and the current branch from
+ * the provided RepoStatus object.
+ *
+ * @param repo_status: Pointer to the RepoStatus structure. After the
+ *                     function call, this structure will hold the
+ *                     extracted git project name and the current
+ *                     branch name.
+ */
 void extractRepoAndBranchNames(struct RepoStatus *repo_status) {
   repo_status->repo_name = strrchr(repo_status->repo_path, '/') + 1;
   repo_status->branch_name = git_reference_shorthand(repo_status->head_ref);
 }
 
 
+/**
+ * Iterates through each element in the repo to determine their status
+ * relative to the index and working directory. Also tallies any
+ * conflicts.
+ *
+ * @param repo_status: Pointer to the RepoStatus structure. Upon
+ *                     completion, this structure will reflect the
+ *                     working directory, index, and conflict
+ *                     statuses.
+ */
 void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
   git_status_options opts = GIT_STATUS_OPTIONS_INIT;
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
@@ -532,6 +617,15 @@ void setupAndRetrieveGitStatus(struct RepoStatus *repo_status) {
 }
 
 
+/**
+ * Checks if the current repository is in the middle of an interactive
+ * rebase operation by looking for the presence of 'rebase-merge' or
+ * 'rebase-apply' directories in the '.git' folder.
+ *
+ * @param repo_status: Pointer to the RepoStatus structure. The
+ *                     'rebase_in_progress' flag will be set to 1 if
+ *                     an interactive rebase is in progress.
+ */
 void checkForInteractiveRebase(struct RepoStatus *repo_status) {
   char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
   char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
@@ -544,6 +638,17 @@ void checkForInteractiveRebase(struct RepoStatus *repo_status) {
   }
 }
 
+
+/**
+ * Inspects the repository to detect if there are any conflicts or
+ * divergence between the local and remote branches. It sets the
+ * 's_repo' state of the RepoStatus structure based on the findings
+ * (e.g., CONFLICT, NO_DATA, UP_TO_DATE, MODIFIED).
+ *
+ * @param repo_status: Pointer to the RepoStatus structure. This will
+ *                     be updated with conflict and divergence
+ *                     information.
+ */
 void checkForConflictsAndDivergence(struct RepoStatus *repo_status) {
   if (repo_status->conflict_count != 0) {
     // If we're in conflict, mark the repo state accordingly.
