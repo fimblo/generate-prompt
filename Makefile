@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra
 LDFLAGS = -lgit2
 
 UNAME_S := $(shell uname -s)
@@ -46,13 +46,15 @@ install-local: $(BINS)
 	@mkdir -p $(LOCAL_INSTALL_DIR)
 	@rm -f $(LOCAL_INSTALL_DIR)/generate-prompt
 	@cp $(BIN_DIR)/generate-prompt $(LOCAL_INSTALL_DIR)/generate-prompt
-	@echo "Copied binary: $(LOCAL_INSTALL_DIR)/generate-prompt -> $(abspath $(BIN_DIR)/generate-prompt)"
+	@echo "Copied binary: $(abspath $(BIN_DIR)/generate-prompt) -> $(LOCAL_INSTALL_DIR)/generate-prompt "
 
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
 
-debug: CFLAGS += -g  # Add -g flag for debugging
-debug: build  # Build with debugging support
+debug: CFLAGS += -g
+debug: build
+	@echo "Adding -g flag for debugging"
+
 
 
 test:
