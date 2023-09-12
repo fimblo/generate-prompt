@@ -45,8 +45,8 @@ install:
 install-local: $(BINS)
 	@mkdir -p $(LOCAL_INSTALL_DIR)
 	@rm -f $(LOCAL_INSTALL_DIR)/generate-prompt
-	@ln -s $(abspath $(BIN_DIR)/generate-prompt) $(LOCAL_INSTALL_DIR)/generate-prompt
-	@echo "Symbolic link created: $(LOCAL_INSTALL_DIR)/generate-prompt -> $(abspath $(BIN_DIR)/generate-prompt)"
+	@cp $(BIN_DIR)/generate-prompt $(LOCAL_INSTALL_DIR)/generate-prompt
+	@echo "Copied binary: $(LOCAL_INSTALL_DIR)/generate-prompt -> $(abspath $(BIN_DIR)/generate-prompt)"
 
 clean:
 	$(RM) -r $(BUILD_DIR) $(BINS)
