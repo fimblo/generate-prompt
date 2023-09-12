@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Wno-missing-field-initializers -g
+CFLAGS = -Wall -Wextra -g
 LDFLAGS = -lgit2
 
 UNAME_S := $(shell uname -s)
