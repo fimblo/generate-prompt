@@ -227,13 +227,13 @@ void printGitPrompt(const struct RepoContext *repo_context) {
     [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\033[0;37m",
     [ RESET       ] = getenv("GP_RESET")      ?: "\033[0m"
   };
-  const char *wd_style            = getenv("GP_WD_STYLE")                              ?: "basename";
-  const char *wd_relroot_pattern  = getenv("GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN") ?: ":";
-  const char *conflict_style      = getenv("GP_CONFLICT_STYLE")                        ?: "(conflict: %d)";
-  const char *rebase_style        = getenv("GP_REBASE_STYLE")                          ?: "(interactive rebase)";
-  const char *a_divergence_style  = getenv("GP_A_DIVERGENCE_STYLE")                    ?: "%d";
-  const char *b_divergence_style  = getenv("GP_B_DIVERGENCE_STYLE")                    ?: "%d";
-  const char *ab_divergence_style = getenv("GP_AB_DIVERGENCE_STYLE")                   ?: "(%d,-%d)";
+  const char *wd_style            = getenv("GP_WD_STYLE")                      ?: "basename";
+  const char *wd_relroot_pattern  = getenv("GP_WD_STYLE_GITRELPATH_EXCLUSIVE") ?: ":";
+  const char *conflict_style      = getenv("GP_CONFLICT_STYLE")                ?: "(conflict: %d)";
+  const char *rebase_style        = getenv("GP_REBASE_STYLE")                  ?: "(interactive rebase)";
+  const char *a_divergence_style  = getenv("GP_A_DIVERGENCE_STYLE")            ?: "%d";
+  const char *b_divergence_style  = getenv("GP_B_DIVERGENCE_STYLE")            ?: "%d";
+  const char *ab_divergence_style = getenv("GP_AB_DIVERGENCE_STYLE")           ?: "(%d,-%d)";
 
 
   // handle working directory (wd) style

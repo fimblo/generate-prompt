@@ -87,12 +87,12 @@ below.
   the repo, but then there is no text to colour when the repo is not
   in up-to-date state. To address this, there's an environment
   variable you can use to set what is written at the root of the repo:
-  =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN=.
+  =GP_WD_STYLE_GITRELPATH_EXCLUSIVE=.
 
   For example:
   #+begin_src bash
     export GP_WD_STYLE=gitrelpath_exclusive
-    export GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN='☃️'
+    export GP_WD_STYLE_GITRELPATH_EXCLUSIVE='☃️'
   #+end_src
 
   This would make =\pC= expand to the complete path from the root of
@@ -195,7 +195,7 @@ Though these are all currently used for colours, one can use these for
 arbitrary text.
 
 **** Other patterns
-- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE_PATTERN= ([[#pc-styles][sic]])
+- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE= ([[#pc-styles][sic]])
 
 
 ** Dependencies
