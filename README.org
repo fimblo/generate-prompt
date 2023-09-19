@@ -195,7 +195,7 @@ Though these are all currently used for colours, one can use these for
 arbitrary text.
 
 **** Other patterns
-- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE= ([[#pc-styles][sic]])
+- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE= ([[#current-working-directory-pc-styles][sic]])
 
 
 ** Dependencies
