@@ -16,10 +16,11 @@
  */
 
 // max buffer sizes
-#define MAX_PATH_BUFFER_SIZE   2048
-#define MAX_REPO_BUFFER_SIZE   256
-#define MAX_BRANCH_BUFFER_SIZE 256
-#define MAX_STYLE_BUFFER_SIZE  64
+#define MAX_PATH_BUFFER_SIZE    2048
+#define MAX_REPO_BUFFER_SIZE    256
+#define MAX_BRANCH_BUFFER_SIZE  256
+#define MAX_STYLE_BUFFER_SIZE   64
+#define MAX_PARAM_MESSAGE_BUFFER_SIZE 64
 
 
 enum states {
@@ -116,12 +117,120 @@ void checkForInteractiveRebase(struct RepoContext *repo_context);
 // Identifies any conflicts/divergence between local and remote branches.
 void checkForConflictsAndDivergence(struct RepoContext *repo_context);
 
+// Function to display help message
+void displayHelp(const char *message) {
+  printf("USAGE\n");
+  printf("  generate-prompt [-h|-H]\n");
+  printf("\n");
+  printf("OPTIONS\n");
+  printf("  -h    This help message\n");
+  printf("  -H    Show all configuration options\n");
+  printf("\n");
+
+  printf("OVERVIEW\n");
+  printf("  Upon invocation, generate-prompt will print a context-aware prompt.\n");
+  printf("  \n");
+  printf("  There are two main modes:\n");
+  printf("    - git mode\n");
+  printf("    - normal mode\n");
+  printf("  \n");
+  printf("  If run while standing in a git repository, the prompt will output\n");
+  printf("  git-specific information of your choosing.\n");
+  printf("  \n");
+  printf("  If run outside a git-repository, it will default to a normal prompt.\n");
+  printf("\n");
+
+  printf("CONFIGURATION\n");
+  printf("  generate-prompt is configured entirely using environment variables.\n");
+  printf("  You can find all configuration options by passing the '-H' parameter\n");
+  printf("  to the binary.\n\n");
+
+  if (message)
+    printf("\nError: %s\n", message);
+}
+
+// Function to show configuration help
+void displayConfigHelp() {
+  printf("ENVIRONMENT VARIABLE OVERVIEW\n");
+  printf("  GP_DEFAULT_PROMPT                for non-git dirs\n");
+  printf("  GP_GIT_PROMPT                    for git dirs\n");
+  printf("  GP_UP_TO_DATE                    up-to-date colour\n");
+  printf("  GP_MODIFIED                      modified colour\n");
+  printf("  GP_CONFLICT                      conflict colour\n");
+  printf("  GP_NO_DATA                       no-data colour\n");
+  printf("  GP_RESET                         reset terminal colour\n");
+  printf("  GP_WD_STYLE                      style for \\pC instruction\n");
+  printf("  GP_WD_STYLE_GITRELPATH_EXCLUSIVE how to show root if empty\n");
+  printf("  GP_CONFLICT_STYLE                style for \\pK instruction\n");
+  printf("  GP_REBASE_STYLE                  style for \\pi instruction\n");
+  printf("  GP_A_DIVERGENCE_STYLE            style for \\pa instruction\n");
+  printf("  GP_B_DIVERGENCE_STYLE            style for \\pb instruction\n");
+  printf("  GP_AB_DIVERGENCE_STYLE           style for \\pd instruction\n");
+  printf("\n\n");
+
+  printf("INSTRUCTION OVERVIEW\n");
+  printf("  \\pR     repo name (coloured)\n");
+  printf("  \\pr     repo name\n");
+  printf("  \\pl     branch name (coloured)\n");
+  printf("  \\pl     branch name\n");
+  printf("  \\pc     working directory (coloured)\n");
+  printf("  \\pc     working directory\n");
+  printf("\n");
+  printf("  \\pa     ref divergence, ahead of upstream\n");
+  printf("  \\pb     ref divergence, behind upstream\n");
+  printf("  \\pd     ref divergence, ahead and behind\n");
+  printf("\n");
+  printf("  \\pi     show if interactive rebase\n");
+  printf("  \\pk     show if conflict (coloured)\n");
+  printf("  \\pk     show if conflict\n");
+  printf("\n\n");
+
+  printf("EXAMPLE\n");
+  printf("\n");
+  printf("    export GP_GIT_PROMPT=\"\\pR/\\pL|\\pC \\pk\\pi\\n$ \"\n");
+  printf("\n");
+  printf("  Here we configure the GP_GIT_PROMPT so that it shows the following\n");
+  printf("  information:\n");
+  printf("  - The repository name*, followed by a slash\n");
+  printf("  - The branch name*, followed by a pipe\n");
+  printf("  - The current working directory*, followed by a space\n");
+  printf("  - Add a note if the repo is currently in conflict\n");
+  printf("  - Add a note if the repo is currently in interactive rebase\n");
+  printf("  - Add a newline character\n");
+  printf("  - Add a \"$ \" to position the cursor\n");
+  printf("\n");
+  printf("  * The repository name, the branch name, and the current working\n");
+  printf("    directory will be coloured according to the state they are in.\n");
+  printf("\n\n");
+
+  printf("Please find extensive documentation on each of the above instructions\n");
+  printf("and environment variables in the file README.org.\n");
+}
 
 
 /* --------------------------------------------------
  * Functions
  */
-int main() {
+int main(int argc, char *argv[]) {
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-h") == 0) {
+      displayHelp(NULL);
+      return 0;
+    }
+    if (strcmp(argv[i], "-H") == 0) {
+      displayConfigHelp(NULL);
+      return 0;
+    }
+    else {
+      char message[MAX_PARAM_MESSAGE_BUFFER_SIZE];
+      sprintf(message, "Parameter '%s' unknown", argv[i]);
+      displayHelp(message);
+      return 1;
+    }
+  }
+
+
+
   struct RepoContext repo_context;
 
   git_libgit2_init();

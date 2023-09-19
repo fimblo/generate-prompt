@@ -647,3 +647,21 @@ teardown () {
   # will write later
   skip
 }
+
+# --------------------------------------------------
+@test "usage: -h prints and exits 0" {
+  # will write later
+  skip
+}
+
+# --------------------------------------------------
+@test "usage: -H prints and exits 0" {
+  # will write later
+  skip
+}
+
+# --------------------------------------------------
+@test "usage: non-supported flag prints and exits 1" {
+  # will write later
+  skip
+}
