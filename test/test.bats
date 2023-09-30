@@ -69,11 +69,11 @@ setup () {
 
 
   # colour codes used by all tests
-  UP_TO_DATE="\033[0;32m"
-  MODIFIED="\033[0;33m"
-  CONFLICT="\033[0;31m"
-  NO_DATA="\033[0;37m"
-  RESET="\033[0m"
+  UP_TO_DATE="\[\033[0;32m\]"
+  MODIFIED="\[\033[0;33m\]"
+  CONFLICT="\[\033[0;31m\]"
+  NO_DATA="\[\033[0;37m\]"
+  RESET="\[\033[0m\]"
 
   # exit codes
   EXIT_GIT_PROMPT=0
