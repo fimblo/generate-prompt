@@ -1,0 +1,1 @@
+pandoc -s -f org -t man generate-prompt.1.org -o generate-prompt.1

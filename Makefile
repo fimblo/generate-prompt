@@ -39,8 +39,10 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 install:
-	@echo "Installing $(BIN) to /usr/local/bin"
-	@install -m 755 $(BIN) /usr/local/bin/
+	echo "Installing $(BIN) to /usr/local/bin"
+	install -m 755 $(BIN) /usr/local/bin/
+    cp generate-prompt /usr/local/bin
+    cp man/generate-prompt.1 /usr/local/share/man/man1
 
 install-local: $(BINS)
 	@mkdir -p $(LOCAL_INSTALL_DIR)

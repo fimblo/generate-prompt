@@ -1,0 +1,13 @@
+
+#+begin_comment
+TODO
+- add GP_CONFLICT_STYLE style doc
+- make better video
+- maybe rename most of the styles to formats?
+#+end_comment
+
+
+
+* generate-prompt
+[[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
+[[file:recording.gif]]

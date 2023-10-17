@@ -1,0 +1,217 @@
+
+#+begin_comment
+TODO
+- add GP_CONFLICT_STYLE style doc
+- make better video
+- maybe rename most of the styles to formats?
+#+end_comment
+
+
+
+* generate-prompt
+#+BEGIN_GITHUB_ONLY
+[[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
+#+END_GITHUB_ONLY
+
+Simple and fast prompt for bash which can show git repo status
+
+** What does generate-prompt do?
+- It prints a useful prompt, for easy plugging into PS1.
+- It can tell if you're standing in a git repo or if you're outside of
+  one. Depending on the situation, it will use one of the two main
+  prompt types.
+
+#+BEGIN_GITHUB_ONLY
+[[file:recording.gif]]
+#+END_GITHUB_ONLY
+
+** I wrote this because
+- I'm a bash user, and
+- bash functions to update the prompt when standing in a git repo is
+  just too slow
+
+** Usage (basic)
+Source the contents of =profile= into your bash shell. There's a lot
+of stuff in there, mostly commented, but the core of it is:
+
+#+begin_src bash
+  prompt_cmd() {
+    PS1="$(/path/to/generate-prompt)"
+  }
+  PROMPT_COMMAND=prompt_cmd
+#+end_src
+
+** Usage (More fun)
+Generate-prompt was designed to be configured. The defaults should
+work well enough, but if you want to modify the look of the prompt,
+read on.
+
+*** Instructions
+
+#+begin_src bash
+export GP_GIT_PROMPT="[\pR][\pL][\pC]\n$ "
+#+end_src
+
+The strings in the example above which begin with =\p= are
+three-character Instructions which generate-prompt looks for. These,
+if found, are replaced with other content.
+
+For example, =\pC= is replaced with the name of the current working
+directory you're standing in.
+
+Currently supported Instructions:
+- =\pR= replaced with the git repo name (=\pr= for undecorated)
+- =\pL= replaced with the local branch name (=\pl= for undecorated)
+- =\pC= replaced with the current working directory(cwd) (=\pc= for undecorated)
+- =\pa= replaced with number of commits local is ahead of upstream              
+- =\pb= replaced with number of commits local is behind of upstream
+- =\pd= replaced with combination of =\pa= and =\pb=. "=(a:-b)="
+- =\pK= replaced with warning about conflicts in git repo, if there are any. (=\pk= for undecorated)
+- =\pi= replaced with "(interactive rebase)" if in that state.
+
+Note that upper-case Instructions are decorated with Pre- and postfix
+patterns (see below)
+
+*** Instruction Styles
+Instructions can be further configured using Styles. 
+
+**** Current working directory (=\pC=) Styles
+The part of the prompt which shows the current working directory, is
+governed by the =\pC= Instruction. To change its style, you
+can set the environment variable =GP_WD_STYLE= to one of styles
+below.
+
+- If unset or set to =basename=, =\pC= will output the basename of CWD.
+- If set to =cwd=, output the full path from the user's =$HOME=.
+- If set to =gitrelpath_inclusive=, output the full path from
+  git-root, including the project name
+- If set to =gitrelpath_exclusive=, output the full path from
+  git-root, excluding the project name. This is nice in that it
+  doesn't repeat the name of the project when standing at the root of
+  the repo, but then there is no text to colour when the repo is not
+  in up-to-date state. To address this, there's an environment
+  variable you can use to set what is written at the root of the repo:
+  =GP_WD_STYLE_GITRELPATH_EXCLUSIVE=.
+
+  For example:
+  #+begin_src bash
+    export GP_WD_STYLE=gitrelpath_exclusive
+    export GP_WD_STYLE_GITRELPATH_EXCLUSIVE='☃️'
+  #+end_src
+
+  This would make =\pC= expand to the complete path from the root of
+  the git repo to the directory you're standing in, and replace the
+  name of the repo with ☃️.
+  
+**** Interactive rebase (=\pi=) Style
+You can override the default string used to indicate an ongoing
+interactive rebase by setting the =GP_REBASE_STYLE= environment
+variable.
+
+For example:
+#+begin_src bash
+  export GP_REBASE_STYLE="(interactive rebase)"
+#+end_src
+
+This would make the prompt show the string "(interactive rebase)" when
+the repo you're standing in is in the interactive rebase state.
+
+**** Upstream divergence (=\pa=, =\pb=, and =\pd=) Styles
+Generate-prompt can tell when the local repo has diverged from the
+upstream ref. What is shown in the prompt in these situations is
+governed by the three Instructions =\pa= (ahead), =\pb= (behind), and
+=\pd= (both ahead and behind of upstream ref). To change what these
+look like, set one or all of the following environment variables:
+
+- =GP_A_DIVERGENCE_STYLE=
+- =GP_B_DIVERGENCE_STYLE=
+- =GP_AB_DIVERGENCE_STYLE=
+
+These are used directly as printf formats, so you'll need to set =%d=
+in them to specify where the diffs should be displayed.
+
+For example, if we're behind by 1 and ahead by 2, and you set these like so:
+#+begin_src bash
+  export GP_A_DIVERGENCE_STYLE="(%d)"
+  export GP_B_DIVERGENCE_STYLE="(-%d)"
+  export GP_AB_DIVERGENCE_STYLE="(%d,-%d)"
+#+end_src
+
+Then =\pa= will expand to "(1)", =\pb= will expand to "(-2)", and
+=\pd= will expand to "(1,-2)".
+
+*** Patterns
+These are environment variables which override some particular part of
+the default look of generate-prompt.
+
+Generate-prompt will look for Instructions (see above) inside
+of these patterns, and replace them with specific strings which depend
+on the current context.
+
+**** The default prompt pattern
+=GP_DEFAULT_PROMPT= is a pattern which overrides the hard-coded prompt
+you see when not in a git repo. It is passed as-is to stdout, so your
+normal PS1 prompt can be set here.
+
+Example:
+#+begin_src bash
+export GP_DEFAULT_PROMPT="\u@\h $ "
+#+end_src
+
+**** The git prompt pattern
+=GP_GIT_PROMPT= pattern overrides the hard-coded git prompt you see
+when in a git repo. After some string replacements are done, it is
+passed to stdout like it does with the default prompt.
+
+Example:
+#+begin_src bash
+export GP_GIT_PROMPT="[\pR][\pL][\pC]\n$ "
+#+end_src
+
+You may have noticed that there are three peculiar substrings in the
+example above, which start with a =\p=, followed by a character. These
+are the [[#instructions][Instructions]] mentioned above.
+
+
+**** Pre- and postfix patterns
+Some Instructions will decorate the output with colours,
+depending on context.
+
+For example, if you are standing in a git repo and change a tracked
+file, then the current working directory Instruction (=\pC=) will
+change the colour of its output to indicate a status change. Once the
+change is staged, it will once again revert to its original colour.
+
+Prefix patterns:
+#+begin_src bash
+ export GP_UP_TO_DATE="\033[0;32m"
+ export GP_MODIFIED="\033[0;33m"
+ export GP_CONFLICT="\033[0;31m"
+ export GP_NO_DATA="\033[0;37m"
+#+end_src
+
+Postfix patterns:
+#+begin_src bash
+ export GP_RESET="\033[0m"
+#+end_src
+
+Though these are all currently used for colours, one can use these for
+arbitrary text.
+
+**** Other patterns
+- =GP_WD_STYLE_GITRELPATH_EXCLUSIVE= ([[#current-working-directory-pc-styles][sic]])
+
+
+** Dependencies
+- [[https://github.com/libgit2/libgit2][libgit2]]
+- [[https://github.com/bats-core/bats-core][bats-core]]
+
+** Install
+
+- Install dependencies:
+  - With homebrew: =brew install libgit2 bats-core=
+  - With apt: =sudo apt install libgit2-dev bats=
+- Run =make= to build generate-prompt. (tested on mac and ubuntu)
+- =make local-install= installs at ~/bin
+- =sudo make install= installs at /usr/local/bin
+- =make clean= cleans things up.
