@@ -16,10 +16,10 @@
  */
 
 // max buffer sizes
-#define MAX_PATH_BUFFER_SIZE    2048
-#define MAX_REPO_BUFFER_SIZE    256
-#define MAX_BRANCH_BUFFER_SIZE  256
-#define MAX_STYLE_BUFFER_SIZE   64
+#define MAX_PATH_BUFFER_SIZE          2048
+#define MAX_REPO_BUFFER_SIZE          256
+#define MAX_BRANCH_BUFFER_SIZE        256
+#define MAX_STYLE_BUFFER_SIZE         64
 #define MAX_PARAM_MESSAGE_BUFFER_SIZE 64
 
 
@@ -45,12 +45,12 @@ enum exit_code {
 // used to pass repo info around between functions
 struct RepoContext {
   // Repo generics
-  git_repository *repo_obj;
-  const char *repo_name;
-  const char *repo_path;
-  const char *branch_name;
-  git_reference *head_ref;
-  const git_oid *head_oid;
+  git_repository  *repo_obj;
+  const char      *repo_name;
+  const char      *repo_path;
+  const char      *branch_name;
+  git_reference   *head_ref;
+  const git_oid   *head_oid;
   git_status_list *status_list;
 
   // Repo state
@@ -229,10 +229,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-
-
   struct RepoContext repo_context;
-
   git_libgit2_init();
   initializeRepoStatus(&repo_context);
 
@@ -253,9 +250,7 @@ int main(int argc, char *argv[]) {
   checkForInteractiveRebase(&repo_context);
   checkForConflictsAndDivergence(&repo_context);
 
-
   printGitPrompt(&repo_context);
-
 
   cleanupResources(&repo_context);
   git_libgit2_shutdown();
@@ -349,15 +344,18 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   char wd[MAX_PATH_BUFFER_SIZE];
   char full_path[MAX_PATH_BUFFER_SIZE];
   getcwd(full_path, sizeof(full_path));
-  if (strcmp(wd_style, "basename") == 0) {                  // show basename
+  if (strcmp(wd_style, "basename") == 0) {
+    // show basename of directory path
     sprintf(wd, "%s", basename(full_path));
   }
-  else if (strcmp(wd_style, "cwd") == 0) {                  // show the entire path, from $HOME
+  else if (strcmp(wd_style, "cwd") == 0) {
+    // show the entire path, from $HOME
     const char *home = getenv("HOME") ?: "";
     size_t common_length = strspn(full_path, home);
     sprintf(wd, "~/%s", full_path + common_length);
   }
-  else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) { // show the entire path, from git-root (exclusive)
+  else if (strcmp(wd_style, "gitrelpath_exclusive") == 0) {
+    // show the entire path, from git-root (exclusive)
     size_t common_length = strspn(repo_context->repo_path, full_path);
     if (common_length == strlen(full_path)) {
       sprintf(wd, "%s", wd_relroot_pattern);
@@ -365,9 +363,9 @@ void printGitPrompt(const struct RepoContext *repo_context) {
     else {
       sprintf(wd, "%s%s", wd_relroot_pattern, full_path + common_length + 1);
     }
-
   }
-  else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) { // show the entire path, from git-root (inclusive)
+  else if (strcmp(wd_style, "gitrelpath_inclusive") == 0) {
+    // show the entire path, from git-root (inclusive)
     size_t common_length = strspn(dirname((char *) repo_context->repo_path), full_path) + 1;
     sprintf(wd, "%s", full_path + common_length);
   }
@@ -394,7 +392,7 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   char cwd_colour[MAX_PATH_BUFFER_SIZE]      = { '\0' };
   sprintf(repo_colour,   "%s%s%s", colour[repo_context->s_repo],  repo_context->repo_name,   colour[RESET]);
   sprintf(branch_colour, "%s%s%s", colour[repo_context->s_index], repo_context->branch_name, colour[RESET]);
-  sprintf(cwd_colour,    "%s%s%s", colour[repo_context->s_wdir],  wd,                       colour[RESET]);
+  sprintf(cwd_colour,    "%s%s%s", colour[repo_context->s_wdir],  wd,                        colour[RESET]);
 
   // prep for conflicts
   char conflict[MAX_STYLE_BUFFER_SIZE]        = { '\0' };
@@ -419,7 +417,7 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   // apply all instructions found
   const char *instructions[][2] = {
     { "\\pR", repo_colour              },
-    { "\\pr", repo_context->repo_name   },
+    { "\\pr", repo_context->repo_name  },
 
     { "\\pL", branch_colour            },
     { "\\pl", repo_context->branch_name },
@@ -587,18 +585,17 @@ void initializeRepoStatus(struct RepoContext *repo_context) {
  * path.
  *
  * @param repo_context: Pointer to a RepoContext structure to be
- *                     populated if a repo is found.
+ *                      populated if a repo is found.
  * @return Returns 1 if a repository is found, otherwise returns 0.
  */
 int findAndOpenGitRepository(struct RepoContext *repo_context) {
-  // "/path/to/projectName"
   const char *git_repository_path = findGitRepositoryPath(".");
   if (strlen(git_repository_path) == 0) {
     free((void *) git_repository_path);
     repo_context->exit_code = EXIT_DEFAULT_PROMPT;
     return 0;
   }
-  repo_context->repo_path = git_repository_path;
+  repo_context->repo_path = git_repository_path;  // "/path/to/projectName"
 
   git_repository *repo = NULL;
   if (git_repository_open(&repo, git_repository_path) != 0) {
