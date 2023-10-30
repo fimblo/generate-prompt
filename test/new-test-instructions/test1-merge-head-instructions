@@ -1,0 +1,12 @@
+mkdir test_repo && cd test_repo
+git init
+echo "Hello" > file.txt
+git add file.txt
+git commit -m "Initial commit"
+git checkout -b feature
+echo "World" >> file.txt
+git commit -am "Feature change"
+git checkout main
+echo "Universe" >> file.txt
+git commit -am "Main change"
+git merge feature

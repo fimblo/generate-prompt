@@ -1,0 +1,14 @@
+mkdir rebase_repo && cd rebase_repo
+git init
+echo "Initial content" > file.txt
+git add file.txt
+git commit -m "Initial commit"
+echo "More content" >> file.txt
+git commit -am "More initial content"
+git checkout -b feature
+echo "Feature content" >> file.txt
+git commit -am "Add feature"
+git checkout main
+echo "Main content" >> file.txt
+git commit -am "Update main"
+echo git rebase -i HEAD~2

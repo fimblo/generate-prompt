@@ -1,0 +1,8 @@
+mkdir revert_repo && cd revert_repo
+git init
+echo "Initial content" > file.txt
+git add file.txt
+git commit -m "Initial commit"
+echo "More content" >> file.txt
+git commit -am "More initial content"
+git revert HEAD --no-commit

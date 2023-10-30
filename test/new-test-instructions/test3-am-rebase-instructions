@@ -1,0 +1,15 @@
+mkdir rebase_apply_repo_am
+cd rebase_apply_repo_am
+git init
+echo "initial" > file.txt
+git add file.txt
+git commit -m "Initial commit"
+git checkout -b feature
+echo "feature" >> file.txt
+git commit -a -m "Add feature"
+git checkout main
+echo "main" >> file.txt
+git commit -a -m "Update main"
+git am --3way --abort || true # Reset any am session
+git format-patch feature^..feature --stdout > feature.patch
+git am feature.patch

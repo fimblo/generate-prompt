@@ -1,0 +1,10 @@
+mkdir bisect_repo && cd bisect_repo
+git init
+echo "good" > file.txt
+git add file.txt
+git commit -m "good commit"
+echo "bad" > file.txt
+git commit -am "bad commit"
+git bisect start
+git bisect bad HEAD
+git bisect good HEAD~1

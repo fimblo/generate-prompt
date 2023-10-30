@@ -1,0 +1,12 @@
+mkdir cherry_pick_repo && cd cherry_pick_repo
+git init
+echo "Initial content" > file.txt
+git add file.txt
+git commit -m "Initial commit"
+git checkout -b feature
+echo "Feature content" >> file.txt
+git commit -am "Add feature"
+git checkout main
+echo "Main content" >> file.txt
+git commit -am "Update main"
+git cherry-pick feature
