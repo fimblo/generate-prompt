@@ -171,9 +171,9 @@ void displayConfigHelp() {
   printf("INSTRUCTION OVERVIEW\n");
   printf("  \\pR     repo name (coloured)\n");
   printf("  \\pr     repo name\n");
-  printf("  \\pl     branch name (coloured)\n");
+  printf("  \\pL     branch name (coloured)\n");
   printf("  \\pl     branch name\n");
-  printf("  \\pc     working directory (coloured)\n");
+  printf("  \\pC     working directory (coloured)\n");
   printf("  \\pc     working directory\n");
   printf("\n");
   printf("  \\pa     ref divergence, ahead of upstream\n");
@@ -181,7 +181,7 @@ void displayConfigHelp() {
   printf("  \\pd     ref divergence, ahead and behind\n");
   printf("\n");
   printf("  \\pi     show if interactive rebase\n");
-  printf("  \\pk     show if conflict (coloured)\n");
+  printf("  \\pK     show if conflict (coloured)\n");
   printf("  \\pk     show if conflict\n");
   printf("\n\n");
 
