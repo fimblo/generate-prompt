@@ -24,11 +24,11 @@
 
 
 enum states {
-  UP_TO_DATE  = 0,
-  MODIFIED    = 1,
-  CONFLICT    = 2,
-  NO_DATA     = 3,
-  RESET       = 4,
+  RESET       = 0,
+  NO_DATA     = 1,
+  UP_TO_DATE  = 2,
+  MODIFIED    = 3,
+  CONFLICT    = 4,
 };
 
 enum exit_code {
@@ -325,11 +325,11 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   // environment, else default values
   const char *undigestedPrompt = getenv("GP_GIT_PROMPT") ?: "[\\pR/\\pL/\\pC]\\pk\n$ ";
   const char *colour[5] = {
+    [ RESET       ] = getenv("GP_RESET")      ?: "\\[\033[0m\\]",
+    [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\\[\033[0;37m\\]",
     [ UP_TO_DATE  ] = getenv("GP_UP_TO_DATE") ?: "\\[\033[0;32m\\]",
     [ MODIFIED    ] = getenv("GP_MODIFIED")   ?: "\\[\033[0;33m\\]",
-    [ CONFLICT    ] = getenv("GP_CONFLICT")   ?: "\\[\033[0;31m\\]",
-    [ NO_DATA     ] = getenv("GP_NO_DATA")    ?: "\\[\033[0;37m\\]",
-    [ RESET       ] = getenv("GP_RESET")      ?: "\\[\033[0m\\]"
+    [ CONFLICT    ] = getenv("GP_CONFLICT")   ?: "\\[\033[0;31m\\]"
   };
   const char *wd_style            = getenv("GP_WD_STYLE")                      ?: "basename";
   const char *wd_relroot_pattern  = getenv("GP_WD_STYLE_GITRELPATH_EXCLUSIVE") ?: ":";
