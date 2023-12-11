@@ -7,7 +7,7 @@ bats_require_minimum_version 1.5.0
 
 
 helper__new_repo() {
-  git init
+  git init --initial-branch=main
 
   # Set repo-local git config
   git config user.email "my@test.com"
