@@ -8,6 +8,12 @@ bats_require_minimum_version 1.5.0
 
 helper__new_repo() {
   git init
+
+  # Set repo-local git config
+  git config user.email "my@test.com"
+  git config user.name "Test Person"
+  git config pull.rebase true
+
 }
 
 helper__new_repo_and_add_file() {
@@ -58,14 +64,6 @@ setup () {
   unset GP_A_DIVERGENCE_STYLE
   unset GP_B_DIVERGENCE_STYLE
   unset GP_AB_DIVERGENCE_STYLE
-
-
-  # Set global git user/email if it is not set
-  if ! [ -e ~/.gitconfig ] ; then
-    git config --global user.email "my@test.com"
-    git config --global user.name "Test Person"
-    git config --global pull.rebase true
-  fi
 
 
   # colour codes used by all tests
