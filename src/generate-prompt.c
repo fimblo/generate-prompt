@@ -61,6 +61,8 @@ struct RepoContext {
   int behind;
   int conflict_count;
   int rebase_in_progress;
+  int staged_changes;
+  int unstaged_changes;
 
   // application stuff
   int exit_code;
@@ -609,6 +611,8 @@ void initializeRepoStatus(struct RepoContext *repo_context) {
   repo_context->behind             = 0;
   repo_context->conflict_count     = 0;
   repo_context->rebase_in_progress = 0;
+  repo_context->staged_changes     = 0;
+  repo_context->unstaged_changes   = 0;
   repo_context->exit_code          = 0;
 }
 
@@ -733,6 +737,9 @@ void setupAndRetrieveGitStatus(struct RepoContext *repo_context) {
   opts.show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR;
   opts.flags = GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX;
 
+  int staged_changes   = 0;
+  int unstaged_changes = 0;
+
   git_status_list *status_list = NULL;
   if (git_status_list_new(&status_list, repo_context->repo_obj, &opts) != 0) {
     git_reference_free(repo_context->head_ref);
@@ -746,21 +753,32 @@ void setupAndRetrieveGitStatus(struct RepoContext *repo_context) {
   for (int i = 0; i < status_count; i++) {
     const git_status_entry *entry = git_status_byindex(status_list, i);
     if (entry->status == GIT_STATUS_CURRENT) continue;
+
     if (entry->status & GIT_STATUS_CONFLICTED)       repo_context->conflict_count++;
 
-    if (entry->status & GIT_STATUS_INDEX_NEW)        repo_context->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_MODIFIED)   repo_context->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_RENAMED)    repo_context->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_DELETED)    repo_context->s_index = MODIFIED;
-    if (entry->status & GIT_STATUS_INDEX_TYPECHANGE) repo_context->s_index = MODIFIED;
+    // Check for staged changes
+    if (entry->status & (GIT_STATUS_INDEX_NEW      |
+                         GIT_STATUS_INDEX_MODIFIED |
+                         GIT_STATUS_INDEX_RENAMED  |
+                         GIT_STATUS_INDEX_DELETED  |
+                         GIT_STATUS_INDEX_TYPECHANGE)) {
+      repo_context->s_index = MODIFIED;
+      staged_changes++;
+    }
 
-    if (entry->status & GIT_STATUS_WT_RENAMED)       repo_context->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_DELETED)       repo_context->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_MODIFIED)      repo_context->s_wdir = MODIFIED;
-    if (entry->status & GIT_STATUS_WT_TYPECHANGE)    repo_context->s_wdir = MODIFIED;
-  }
+    // Check for unstaged changes 
+    if (entry->status & (GIT_STATUS_WT_MODIFIED |
+                         GIT_STATUS_WT_DELETED  |
+                         GIT_STATUS_WT_RENAMED  |
+                         GIT_STATUS_WT_TYPECHANGE)) {
+      repo_context->s_wdir = MODIFIED;
+      unstaged_changes++;
+    }
+}
 
   repo_context->status_list = status_list;
+  repo_context->staged_changes = staged_changes;
+  repo_context->unstaged_changes = unstaged_changes;
 }
 
 
