@@ -183,6 +183,9 @@ void displayConfigHelp() {
   printf("  \\pi     show if interactive rebase\n");
   printf("  \\pK     show if conflict (coloured)\n");
   printf("  \\pk     show if conflict\n");
+  printf("\n");
+  printf("  \\pP     show prompt symbol $/# (coloured)\n");
+  printf("  \\pp     show prompt symbol $/#\n");
   printf("\n\n");
 
   printf("EXAMPLE\n");
@@ -413,6 +416,17 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   if (repo_context->behind != 0)
     sprintf(divergence_b, b_divergence_style, repo_context->behind);
 
+  // prep for showing user-class dependent symbol
+  char show_prompt_colour[MAX_STYLE_BUFFER_SIZE] = { '\0'};
+  char show_prompt[MAX_STYLE_BUFFER_SIZE]        = { '\0'};
+  const char * prompt_symbol;
+  if (getuid() == 0) {
+    prompt_symbol = "#";
+  } else {
+    prompt_symbol = "$";
+  }
+  sprintf(show_prompt_colour, "%s%s%s", colour[repo_context->s_wdir], prompt_symbol, colour[RESET]);
+  sprintf(show_prompt, "%s", prompt_symbol);
 
   // apply all instructions found
   const char *instructions[][2] = {
@@ -433,6 +447,9 @@ void printGitPrompt(const struct RepoContext *repo_context) {
     { "\\pb", divergence_b             },
 
     { "\\pi", rebase                   },
+
+    { "\\pP", show_prompt_colour       },
+    { "\\pp", show_prompt              },
   };
 
 
