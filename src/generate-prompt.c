@@ -420,7 +420,11 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   char show_prompt_colour[MAX_STYLE_BUFFER_SIZE] = { '\0'};
   char show_prompt[MAX_STYLE_BUFFER_SIZE]        = { '\0'};
   const char * prompt_symbol;
-  if (getuid() == 0) {
+
+  // I'd like check if uid is 0, but that's hard to test without
+  // conditional compilation. Orka.
+  const char *username = getenv("USER");
+  if (username && strcmp(username, "root") == 0) {
     prompt_symbol = "#";
   } else {
     prompt_symbol = "$";
