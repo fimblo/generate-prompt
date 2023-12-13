@@ -61,6 +61,7 @@ struct RepoContext {
   int behind;
   int conflict_count;
   int rebase_in_progress;
+  int merge_or_cherry_pick_in_progress;
 
   // application stuff
   int exit_code;
@@ -741,12 +742,20 @@ void setupAndRetrieveGitStatus(struct RepoContext *repo_context) {
 void checkForInteractiveRebase(struct RepoContext *repo_context) {
   char rebaseMergePath[MAX_PATH_BUFFER_SIZE];
   char rebaseApplyPath[MAX_PATH_BUFFER_SIZE];
+  char mergeHeadPath[MAX_PATH_BUFFER_SIZE];
+  char cherryPickHeadPath[MAX_PATH_BUFFER_SIZE];
+
   snprintf(rebaseMergePath, sizeof(rebaseMergePath), "%s/.git/rebase-merge", repo_context->repo_path);
   snprintf(rebaseApplyPath, sizeof(rebaseApplyPath), "%s/.git/rebase-apply", repo_context->repo_path);
+  snprintf(mergeHeadPath, sizeof(mergeHeadPath), "%s/.git/MERGE_HEAD", repo_context->repo_path);
+  snprintf(cherryPickHeadPath, sizeof(cherryPickHeadPath), "%s/.git/CHERRY_PICK_HEAD", repo_context->repo_path);
 
-  struct stat mergeStat, applyStat;
+  struct stat mergeStat, applyStat, mergeHeadStat, cherryPickHeadStat;
   if (stat(rebaseMergePath, &mergeStat) == 0 || stat(rebaseApplyPath, &applyStat) == 0) {
     repo_context->rebase_in_progress = 1;
+  }
+  if (stat(mergeHeadPath, &mergeHeadStat) == 0 || stat(cherryPickHeadPath, &cherryPickHeadStat) == 0) {
+    repo_context->merge_or_cherry_pick_in_progress = 1;
   }
 }
 

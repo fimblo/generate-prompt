@@ -618,6 +618,35 @@ teardown () {
   [ "$output" =  "$evaluated_prompt" ]
 }
 
+@test "merge in progress" {
+   mkdir myRepo
+  cd myRepo
+
+  # given a repo with a merge in progress
+  helper__new_repo_and_commit "file1" "content1"
+  git checkout -b branch2
+  echo "content2" > file1
+  git commit -am 'Change file1 in branch2'
+  git checkout main  # use the actual name of the default branch
+  echo "content3" > file1
+  git commit -am 'Change file1 in main'
+  git merge branch2 --no-commit || true
+
+  # when we run the prompt
+  export GP_GIT_PROMPT="REPO:\\pR:MERGE:\\pm:"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+  # then we should get a git prompt
+  # where the repo field should be uncoloured and \pm should expand to
+  # the merge state.
+  repo=myRepo
+  expected_prompt="REPO:${NO_DATA}${repo}${RESET}:MERGE:1:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" =  "$evaluated_prompt" ]
+}
 
 # --------------------------------------------------
 @test "wd style: cwd inside of \$HOME" {
