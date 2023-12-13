@@ -6,14 +6,16 @@ bats_require_minimum_version 1.5.0
 # bats test/test.bats
 
 
-helper__new_repo() {
-  git init --initial-branch=main
-
+helper__set_git_config() {
   # Set repo-local git config
   git config user.email "my@test.com"
   git config user.name "Test Person"
   git config pull.rebase true
+}
 
+helper__new_repo() {
+  git init --initial-branch=main
+  helper__set_git_config
 }
 
 helper__new_repo_and_add_file() {
@@ -241,6 +243,7 @@ teardown () {
   cd tmp
   git clone ../myRepo
   cd myRepo
+  helper__set_git_config
 
 
   # when we run the prompt
@@ -274,6 +277,7 @@ teardown () {
   cd tmp
   git clone ../myRepo
   cd myRepo
+  helper__set_git_config
 
 
   # given we commit a change
@@ -311,7 +315,9 @@ teardown () {
   mkdir anotherLocation
   cd anotherLocation
   git clone ../myRepo
-  cd -
+  cd myRepo
+  helper__set_git_config
+  cd ../..
 
   # given we commit a change in the first repo 
   cd myRepo
@@ -357,7 +363,9 @@ teardown () {
   mkdir anotherLocation
   cd anotherLocation
   git clone ../myRepo
-  cd -
+  cd myRepo
+  helper__set_git_config
+  cd ../..
 
   # given we commit a change in anotherLocation/myRepo
   cd anotherLocation/myRepo
@@ -399,7 +407,9 @@ teardown () {
   mkdir anotherLocation
   cd anotherLocation
   git clone ../myRepo
-  cd -
+  cd myRepo
+  helper__set_git_config
+  cd ../..
 
   # given we commit a change in the first repo 
   cd myRepo
@@ -452,7 +462,9 @@ teardown () {
   mkdir tmp
   cd tmp
   git clone ../myRepo
-  cd -
+  cd myRepo
+  helper__set_git_config
+  cd ../..
 
   # given we commit a change in the first repo 
   cd myRepo
@@ -503,7 +515,9 @@ teardown () {
   mkdir tmp
   cd tmp
   git clone ../myRepo
-  cd -
+  cd myRepo
+  helper__set_git_config
+  cd ../..
 
   # given we commit a change in the first repo 
   cd myRepo
