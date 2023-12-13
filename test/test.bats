@@ -618,6 +618,44 @@ teardown () {
   [ "$output" =  "$evaluated_prompt" ]
 }
 
+# --------------------------------------------------
+@test "prompt symbol is $ if user is not root" {
+  # given we have a git repo
+  helper__new_repo_and_commit "newfile" "some text"
+
+  # when we run the prompt as a non-root user
+  export GP_GIT_PROMPT="REPO:\\pP:"
+  export USER="nonroot"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+  # then the prompt symbol should be $
+  expected_prompt="REPO:${UP_TO_DATE}\$${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" = "$evaluated_prompt" ]
+}
+
+# --------------------------------------------------
+@test "prompt symbol is # if user is root" {
+  # given we have a git repo
+  helper__new_repo_and_commit "newfile" "some text"
+
+  # when we run the prompt as a root user
+  export GP_GIT_PROMPT="REPO:\\pP:"
+  export USER="root"
+  run -${EXIT_GIT_PROMPT} $GENERATE_PROMPT
+
+  # then the prompt symbol should be $
+  expected_prompt="REPO:${UP_TO_DATE}#${RESET}:"
+  echo -e "Expected: $expected_prompt" >&2
+  echo -e "Output:   $output" >&2
+
+  evaluated_prompt=$(echo -e $expected_prompt)
+  [ "$output" = "$evaluated_prompt" ]
+}
+
 
 # --------------------------------------------------
 @test "wd style: cwd inside of \$HOME" {
