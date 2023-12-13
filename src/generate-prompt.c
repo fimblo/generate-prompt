@@ -421,12 +421,26 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   char show_prompt[MAX_STYLE_BUFFER_SIZE]        = { '\0'};
   const char * prompt_symbol;
 
-  // I'd like check if uid is 0, but that's hard to test without
-  // conditional compilation. Orka.
+  // This is a very ugly solution. My problem is this. I'd like to
+  // only use getuid() to determine the user type, but I can't mock C
+  // functions from a bash test suite. Well... I could do a
+  // conditional compilation with an #ifdef to pass the uid.. but then
+  // I would need to compile two versions for my tests. Ugly as well,
+  // but in another way.
+  //
+  // So instead, I figure that if someone is courageous enough to run
+  // my binary as root, they should never get the '$" symbol in their
+  // prompt. On the other hand, if you don't have escalated rights,
+  // perhaps it's not quite as dangerous to get the '#' symbol in your
+  // prompt - since having that symbol won't get you escalated rights
+  // to your system.
   const char *username = getenv("USER");
-  if (username && strcmp(username, "root") == 0) {
+  if (getuid() == 0) {
     prompt_symbol = "#";
-  } else {
+  } else if (username && strcmp(username, "root") == 0) {
+      prompt_symbol = "#";
+  }
+  else {
     prompt_symbol = "$";
   }
   sprintf(show_prompt_colour, "%s%s%s", colour[repo_context->s_wdir], prompt_symbol, colour[RESET]);
