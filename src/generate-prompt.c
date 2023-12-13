@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     if (strcmp(argv[i], "-H") == 0) {
-      displayConfigHelp(NULL);
+      displayConfigHelp();
       return 0;
     }
     else {
