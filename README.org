@@ -56,14 +56,18 @@ For example, =\pC= is replaced with the name of the current working
 directory you're standing in.
 
 Currently supported Instructions:
-- =\pR= replaced with the git repo name (=\pr= for undecorated)
-- =\pL= replaced with the local branch name (=\pl= for undecorated)
-- =\pC= replaced with the current working directory(cwd) (=\pc= for undecorated)
+- =\pR= replaced with the git repo name*
+- =\pL= replaced with the local branch name*
+- =\pC= replaced with the current working directory(cwd)*
 - =\pa= replaced with number of commits local is ahead of upstream              
 - =\pb= replaced with number of commits local is behind of upstream
 - =\pd= replaced with combination of =\pa= and =\pb=. "=(a:-b)="
-- =\pK= replaced with warning about conflicts in git repo, if there are any. (=\pk= for undecorated)
+- =\pK= replaced with warning about conflicts in git repo, if there are any*
 - =\pi= replaced with "(interactive rebase)" if in that state.
+- =\pP= replaced with prompt symbol # or $ depending on user*
+
+\* =\pr=, =\pl=, =\pc=, =\pk=, =\pp= for uncoloured versions of the above
+
 
 Note that upper-case Instructions are decorated with Pre- and postfix
 patterns (see below)
