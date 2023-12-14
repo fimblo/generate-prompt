@@ -9,8 +9,8 @@ int main(void) {
   initializeRepoContext(&context);
   populateRepoContext(&context, ".");
 
-  printf("Repo name:   %s\n", getRepoName(&context));
-  printf("Branch name: %s\n", getBranchName(&context));
+  printf("Repo.name %s\n", getRepoName(&context));
+  printf("Repo.branch.name %s\n", getBranchName(&context));
   
   git_libgit2_shutdown();
 }
