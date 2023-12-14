@@ -449,6 +449,9 @@ void printGitPrompt(const struct RepoContext *repo_context) {
   sprintf(show_prompt, "%s", prompt_symbol);
 
   // apply all instructions found
+  //
+  // Unused term sequences that I can expand to: \q \x \y \z
+  //
   const char *instructions[][2] = {
     { "\\pR", repo_colour              },
     { "\\pr", repo_context->repo_name  },
