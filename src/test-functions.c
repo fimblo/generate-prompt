@@ -17,20 +17,20 @@ int main(void) {
   getRepoDivergence(&context, &status);
 
 
-  printf("Repo.name %s\n", getRepoName(&context));
+  printf("Repo.name %s\n",        getRepoName(&context));
   printf("Repo.branch.name %s\n", getBranchName(&context));
 
-  printf("Repo.status %s\n", state_names[status.status_repo]);
-  printf("Repo.ahead %d\n", status.ahead);
-  printf("Repo.behind %d\n",status.behind);
+  printf("Repo.status %s\n",      state_names[status.status_repo]);
+  printf("Repo.ahead %d\n",       status.ahead);
+  printf("Repo.behind %d\n",      status.behind);
 
 
-  printf("Staged.status %s\n", state_names[status.status_staged]);
-  printf("Staged.num %d\n", status.staged_changes_num);
-  printf("Unstaged.status %s\n", state_names[status.status_unstaged]);
-  printf("Unstaged.num %d\n", status.unstaged_changes_num);
+  printf("Staged.status %s\n",    state_names[status.status_staged]);
+  printf("Staged.num %d\n",       status.staged_changes_num);
+  printf("Unstaged.status %s\n",  state_names[status.status_unstaged]);
+  printf("Unstaged.num %d\n",     status.unstaged_changes_num);
 
-  printf("Conflict.num %d\n", status.conflict_num);
+  printf("Conflict.num %d\n",     status.conflict_num);
 
   
   git_libgit2_shutdown();

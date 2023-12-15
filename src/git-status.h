@@ -45,16 +45,18 @@ struct RepoContext {
 };
 
 struct RepoStatus {
-  // Repo state
   int status_repo;
-  int status_staged;
-  int status_unstaged;
   int ahead;
   int behind;
+
+  int status_staged;
+  int staged_changes_num;
+
+  int status_unstaged;
+  int unstaged_changes_num;
+
   int conflict_num;
   int rebase_in_progress;
-  int staged_changes_num;
-  int unstaged_changes_num;
 };
 
 void initializeRepoContext(struct RepoContext *repo_context);

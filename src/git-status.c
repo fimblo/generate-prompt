@@ -185,7 +185,6 @@ int __calculateDivergence(git_repository *repo,
   int behindCount = 0;
   git_oid id;
 
-
   // init walker
   git_revwalk *walker = NULL;
   if (git_revwalk_new(&walker, repo) != 0) {
@@ -200,7 +199,6 @@ int __calculateDivergence(git_repository *repo,
   }
   while (git_revwalk_next(&id, walker) == 0) aheadCount++;
 
-
   // count number of commits behind
   git_revwalk_reset(walker);
   if (git_revwalk_push(walker, upstream_oid) != 0 || // set where I want to start
@@ -209,7 +207,6 @@ int __calculateDivergence(git_repository *repo,
     return -3;
   }
   while (git_revwalk_next(&id, walker) == 0) behindCount++;
-
 
   *ahead = aheadCount;
   *behind = behindCount;
@@ -225,7 +222,6 @@ void getRepoDivergence(struct RepoContext *context,
   sprintf(full_remote_branch_name,
           "refs/remotes/origin/%s",
           git_reference_shorthand(context->head_ref));
-
 
     git_reference *upstream_ref = NULL;
     const git_oid *upstream_oid;
@@ -255,7 +251,6 @@ void getRepoDivergence(struct RepoContext *context,
                               &status->ahead,
                               &status->behind);
       }
-
     }
 
     // check if local and remote are the same
