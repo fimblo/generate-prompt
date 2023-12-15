@@ -36,7 +36,7 @@ void initializeRepoStatus(struct RepoStatus *status) {
   status->status_unstaged      = UP_TO_DATE;
   status->unstaged_changes_num = 0;
 
-  status->conflict_count       = 0;
+  status->conflict_num         = 0;
   status->rebase_in_progress   = 0;
 }
 
@@ -147,7 +147,7 @@ void getRepoStatus(git_status_list * status_list, struct RepoStatus *status) {
 
     // Check for conflicts
     if (entry->status & GIT_STATUS_CONFLICTED)
-      status->conflict_count++;
+      status->conflict_num++;
 
     // Check for staged changes
     if (entry->status & (GIT_STATUS_INDEX_NEW      |

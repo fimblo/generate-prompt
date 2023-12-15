@@ -23,6 +23,8 @@ int main(void) {
   printf("Unstaged.status %s\n", state_names[status.status_unstaged]);
   printf("Unstaged.num %d\n", status.unstaged_changes_num);
 
+  printf("Conflict.num %d\n", status.conflict_num);
+
   
   
   git_libgit2_shutdown();

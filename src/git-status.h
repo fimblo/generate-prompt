@@ -50,7 +50,7 @@ struct RepoStatus {
   int status_unstaged;
   int ahead;
   int behind;
-  int conflict_count;
+  int conflict_num;
   int rebase_in_progress;
   int staged_changes_num;
   int unstaged_changes_num;
