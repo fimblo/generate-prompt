@@ -17,8 +17,8 @@ int main(void) {
   getRepoDivergence(&context, &status);
 
 
-  printf("Repo.name %s\n",        getRepoName(&context));
-  printf("Repo.branch.name %s\n", getBranchName(&context));
+  printf("Repo.name %s\n",        getRepoName(&context, &status));
+  printf("Repo.branch.name %s\n", getBranchName(&context, &status));
 
   printf("Repo.status %s\n",      state_names[status.status_repo]);
   printf("Repo.ahead %d\n",       status.ahead);

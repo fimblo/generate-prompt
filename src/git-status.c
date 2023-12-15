@@ -19,15 +19,16 @@ const char *state_names[ENUM_SIZE] = {
 
 void initializeRepoContext(struct RepoContext *context) {
   context->repo_obj     = NULL;
-  context->repo_name    = NULL;
   context->repo_path    = NULL;
-  context->branch_name  = NULL;
   context->head_ref     = NULL;
   context->head_oid     = NULL;
   context->status_list  = NULL;
 }
 
 void initializeRepoStatus(struct RepoStatus *status) {
+  status->repo_name    = NULL;
+  status->branch_name  = NULL;
+
   status->status_repo          = UP_TO_DATE;
   status->ahead                = 0;
   status->behind               = 0;
@@ -108,14 +109,14 @@ int populateRepoContext(struct RepoContext *context, const char *path) {
   return 1;
 }
 
-const char * getRepoName(struct RepoContext *context) {
-  context->repo_name = strrchr(context->repo_path, '/') + 1;
-  return context->repo_name;
+const char * getRepoName(struct RepoContext *context, struct RepoStatus *status) {
+  status->repo_name = strrchr(context->repo_path, '/') + 1;
+  return status->repo_name;
 }
 
-const char * getBranchName(struct RepoContext *context) {
-  context->branch_name = git_reference_shorthand(context->head_ref);
-  return context->branch_name;
+const char * getBranchName(struct RepoContext *context, struct RepoStatus *status) {
+  status->branch_name = git_reference_shorthand(context->head_ref);
+  return status->branch_name;
 }
 
 git_status_list * getRepoStatusList(struct RepoContext * context) {

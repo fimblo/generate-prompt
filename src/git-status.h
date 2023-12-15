@@ -34,17 +34,22 @@ enum exit_code {
   EXIT_FAIL_REPO_OBJ     = -2,
 };
 
+// data for internal functions
 struct RepoContext {
   git_repository  *repo_obj;
-  const char      *repo_name;
   const char      *repo_path;
-  const char      *branch_name;
+
   git_reference   *head_ref;
   const git_oid   *head_oid;
+
   git_status_list *status_list;
 };
 
+// data for the user
 struct RepoStatus {
+  const char *repo_name;
+  const char *branch_name;
+
   int status_repo;
   int ahead;
   int behind;
@@ -62,8 +67,8 @@ struct RepoStatus {
 void initializeRepoContext(struct RepoContext *repo_context);
 void initializeRepoStatus(struct RepoStatus *repo_status);
 int populateRepoContext(struct RepoContext *context, const char *path);
-const char * getRepoName(struct RepoContext *context);
-const char * getBranchName(struct RepoContext *context);
+const char * getRepoName(struct RepoContext *context, struct RepoStatus *status);
+const char * getBranchName(struct RepoContext *context, struct RepoStatus *status);
 git_status_list * getRepoStatusList(struct RepoContext *context); 
 void getRepoStatus(git_status_list * status_list, struct RepoStatus *status);
 int __calculateDivergence(git_repository *repo,
