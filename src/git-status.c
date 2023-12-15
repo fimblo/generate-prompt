@@ -5,11 +5,13 @@
 */
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <git2.h>
 #include "git-status.h"
 
 const char *state_names[ENUM_SIZE] = {
     "NO_DATA",
+    "NO_UPSTREAM",
     "UP_TO_DATE",
     "MODIFIED"
 };
@@ -171,4 +173,96 @@ void getRepoStatus(git_status_list * status_list, struct RepoStatus *status) {
 
   status->staged_changes_num = staged_changes;
   status->unstaged_changes_num = unstaged_changes;
+}
+
+
+int __calculateDivergence(git_repository *repo,
+                        const git_oid *local_oid,
+                        const git_oid *upstream_oid,
+                        int *ahead,
+                        int *behind) {
+  int aheadCount = 0;
+  int behindCount = 0;
+  git_oid id;
+
+
+  // init walker
+  git_revwalk *walker = NULL;
+  if (git_revwalk_new(&walker, repo) != 0) {
+    return -1;
+  }
+
+  // count number of commits ahead
+  if (git_revwalk_push(walker, local_oid)    != 0 ||  // set where I want to start
+      git_revwalk_hide(walker, upstream_oid) != 0) {  // set where the walk ends (exclusive)
+    git_revwalk_free(walker);
+    return -2;
+  }
+  while (git_revwalk_next(&id, walker) == 0) aheadCount++;
+
+
+  // count number of commits behind
+  git_revwalk_reset(walker);
+  if (git_revwalk_push(walker, upstream_oid) != 0 || // set where I want to start
+      git_revwalk_hide(walker, local_oid)    != 0) { // set where the walk ends (exclusive)
+    git_revwalk_free(walker);
+    return -3;
+  }
+  while (git_revwalk_next(&id, walker) == 0) behindCount++;
+
+
+  *ahead = aheadCount;
+  *behind = behindCount;
+
+  git_revwalk_free(walker);
+  return 0;
+}
+
+
+void getRepoDivergence(struct RepoContext *context,
+                       struct RepoStatus *status) {
+  char full_remote_branch_name[128];
+  sprintf(full_remote_branch_name,
+          "refs/remotes/origin/%s",
+          git_reference_shorthand(context->head_ref));
+
+
+    git_reference *upstream_ref = NULL;
+    const git_oid *upstream_oid;
+    const int retval = git_reference_lookup(&upstream_ref,
+                                            context->repo_obj,
+                                            full_remote_branch_name);
+    if (retval != 0) {
+      // If there is no upstream ref, this is a stand-alone branch
+      status->status_repo = NO_UPSTREAM;
+      git_reference_free(upstream_ref);
+    }
+    else {
+      upstream_oid = git_reference_target(upstream_ref);
+
+      // if the upstream_oid is null, we can't get the divergence, so
+      // might as well set it to NO_DATA. Oh and btw, when there's no
+      // conflict _and_ upstream_OID is NULL, then it seems we're
+      // inside of an interactive rebase - when it's not useful to
+      // check for divergences anyway.
+      if (upstream_oid == NULL) {
+        status->status_repo = NO_UPSTREAM;
+      }
+      else {
+        __calculateDivergence(context->repo_obj,
+                              context->head_oid,
+                              upstream_oid,
+                              &status->ahead,
+                              &status->behind);
+      }
+
+    }
+
+    // check if local and remote are the same
+    if (status->status_repo == UP_TO_DATE) {
+      if (git_oid_cmp(context->head_oid, upstream_oid) != 0)
+        status->status_repo = MODIFIED;
+    }
+
+    git_reference_free(upstream_ref);
 }

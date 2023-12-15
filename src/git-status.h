@@ -15,6 +15,7 @@
 
 enum states {
   NO_DATA,
+  NO_UPSTREAM,
   UP_TO_DATE,
   MODIFIED,
   ENUM_SIZE
@@ -63,6 +64,13 @@ const char * getRepoName(struct RepoContext *context);
 const char * getBranchName(struct RepoContext *context);
 git_status_list * getRepoStatusList(struct RepoContext *context); 
 void getRepoStatus(git_status_list * status_list, struct RepoStatus *status);
+int __calculateDivergence(git_repository *repo,
+                          const git_oid *local_oid,
+                          const git_oid *upstream_oid,
+                          int *ahead,
+                          int *behind);
+void getRepoDivergence(struct RepoContext *context,
+                       struct RepoStatus *status);
 
 
 

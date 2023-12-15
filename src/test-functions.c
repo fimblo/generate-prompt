@@ -8,15 +8,22 @@ int main(void) {
   struct RepoContext context;
   initializeRepoContext(&context);
   populateRepoContext(&context, ".");
-
-  printf("Repo.name %s\n", getRepoName(&context));
-  printf("Repo.branch.name %s\n", getBranchName(&context));
-
   getRepoStatusList(&context);
 
   struct RepoStatus status;
   initializeRepoStatus(&status);
   getRepoStatus(context.status_list, &status);
+
+  getRepoDivergence(&context, &status);
+
+
+  printf("Repo.name %s\n", getRepoName(&context));
+  printf("Repo.branch.name %s\n", getBranchName(&context));
+
+  printf("Repo.status %s\n", state_names[status.status_repo]);
+  printf("Repo.ahead %d\n", status.ahead);
+  printf("Repo.behind %d\n",status.behind);
+
 
   printf("Staged.status %s\n", state_names[status.status_staged]);
   printf("Staged.num %d\n", status.staged_changes_num);
@@ -25,7 +32,6 @@ int main(void) {
 
   printf("Conflict.num %d\n", status.conflict_num);
 
-  
   
   git_libgit2_shutdown();
 }
