@@ -16,6 +16,7 @@ int main(void) {
 
   getRepoDivergence(&context, &status);
 
+  printf("CWD %s\n", getCWD(&status));
 
   printf("Repo.name %s\n",        getRepoName(&context, &status));
   printf("Repo.branch.name %s\n", getBranchName(&context, &status));

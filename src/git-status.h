@@ -47,6 +47,8 @@ struct RepoContext {
 
 // data for the user
 struct RepoStatus {
+  const char *cwd_path;
+
   const char *repo_name;
   const char *branch_name;
 
@@ -79,7 +81,7 @@ int __calculateDivergence(git_repository *repo,
 void getRepoDivergence(struct RepoContext *context,
                        struct RepoStatus *status);
 
-
+const char *getCWD(struct RepoStatus *status);
 
 
 #endif //GITSTATUS_H

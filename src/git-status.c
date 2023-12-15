@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <git2.h>
+#include <unistd.h>
 #include "git-status.h"
 
 const char *state_names[ENUM_SIZE] = {
@@ -261,4 +262,11 @@ void getRepoDivergence(struct RepoContext *context,
     }
 
     git_reference_free(upstream_ref);
+}
+
+const char *getCWD(struct RepoStatus *status) {
+  static char cwd_path[MAX_PATH_BUFFER_SIZE];
+  getcwd(cwd_path, sizeof(cwd_path));
+  status->cwd_path = cwd_path;
+  return cwd_path;
 }
