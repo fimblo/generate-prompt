@@ -1,0 +1,28 @@
+Prompt2 ideas
+
+Test: create file to diff against, then run test-function
+Envvar for prompt in nested format ¥col-staged{branchname} etc
+Maybe simple daemon to keep state?
+Option: SSH jump path
+Option: history on/off
+Option: load
+Option: uptime
+Option: df stats
+Option: $?
+Option: aws credentials
+Option: datetime
+Datetime options
+Date time format
+CWD alternatives
+From HOME ~/
+From GITROOT +/ or g/
+CWD styles
+Full
+Accordion
+Divergence styles
+Raw numbers
++, -, ±
+Option: user text ¥usertext{hello}
+
+
+Example col-staged{branchname, usertext{‘hello world’}},
