@@ -19,9 +19,9 @@ BIN_DIR = bin
 LOCAL_INSTALL_DIR = ~/bin
 
 # Source files
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
-BINS = $(patsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%, $(SRCS))
+SRC = $(SRC_DIR)/generate-prompt.c
+OBJ = $(BUILD_DIR)/generate-prompt.o
+BIN = $(BIN_DIR)/generate-prompt
 
 # Targets
 .PHONY: all build install install-local clean test
