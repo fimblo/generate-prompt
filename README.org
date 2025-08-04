@@ -11,7 +11,13 @@ TODO
 * generate-prompt
 [[https://github.com/fimblo/generate-prompt/actions/workflows/c.yml/badge.svg]]
 
-Simple and fast prompt for bash which can show git repo status
+Simple and fast prompt for bash which can show git repo status.
+
+Note: This is my first attempt at writing a prompt generator. For a
+more feature-complete and less spaghetti solution, check the [[https://github.com/fimblo/prompt2][prompt2]]
+project.
+
+
 
 ** What does generate-prompt do?
 - It prints a useful prompt, for easy plugging into PS1.
